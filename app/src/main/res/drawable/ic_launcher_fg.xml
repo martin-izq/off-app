@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- «o.»: la o de off y su punto. Zona segura del ícono adaptable: círculo de 66 dp al centro. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:pathData="M48,40 a14,14 0 1 0 0.01,0z"
+        android:strokeColor="#111111" android:strokeWidth="8" android:fillColor="#00000000" />
+    <path android:pathData="M70,62 a5,5 0 1 0 0.01,0z" android:fillColor="#FF5A36" />
+</vector>

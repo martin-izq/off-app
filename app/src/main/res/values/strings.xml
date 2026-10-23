@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Solo lo que vive en XML (widgets). Los textos de la app están en Kotlin, en pares t("es", "en"). -->
+<resources>
+    <string name="this_week">This week</string>
+    <string name="widget_week">Off · week</string>
+</resources>
