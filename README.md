@@ -4,7 +4,7 @@
 
 No account, no servers, no ads. The app has no INTERNET permission: everything is computed and stored on the phone, and groups sync face to face by QR code.
 
-[Privacy policy](https://martin-izq.github.io/off-app/privacy) · [Play Console notes](docs/play-console.md)
+[Website](https://martin-izq.github.io/off-app/) · [Privacy policy](https://martin-izq.github.io/off-app/privacy) · [Play Console notes](docs/play-console.md)
 
 ## How the game works
 
