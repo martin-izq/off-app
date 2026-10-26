@@ -4,9 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>off. — Life happens off.</title>
-<meta name="description" content="A game you win by putting your phone down. Better with friends. Settled in person.">
+<meta name="description" content="Put your phone down. Score points.">
 <meta property="og:title" content="off. — Life happens off.">
-<meta property="og:description" content="A game you win by putting your phone down. Better with friends. Settled in person.">
+<meta property="og:description" content="Put your phone down. Score points.">
 <meta property="og:image" content="https://martin-izq.github.io/off-app/og.png">
 <link rel="icon" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,250 +22,334 @@
   })();
 </script>
 <style>
-/* Dos diseños del diseñador, uno por modo: «clara» y «oscura». Cada uno se muestra solo en su modo. */
-body{margin:0;background:#f4f3ef;-webkit-font-smoothing:antialiased;transition:background .3s}
-html[data-theme=dark] body{background:#0e0e0e}
+/* Un solo diseño; el modo oscuro solo cambia los colores. */
+:root{--bg:#f4f3ef;--fg:#0e0e0e;--text:#2e2d2a;--muted:#6b6964;--line:#0e0e0e;--paper:#fff;--panel:#0e0e0e;--panel-fg:#f3f2ee;--panel-text:#b5b2ab;--accent:#ff5533;
+  --pad:clamp(20px,5vw,64px);--mono:'JetBrains Mono',monospace}
+html[data-theme=dark]{--bg:#0e0e0e;--fg:#f3f2ee;--text:#b5b2ab;--muted:#8a8780;--line:#3a3936;--paper:#1a1a19;--panel:#1a1a19}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:'Schibsted Grotesk',sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden;transition:background .3s}
 a{color:inherit;text-decoration:none}a:hover{opacity:.7}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
-:focus-visible{outline:2px solid #ff5533;outline-offset:4px;border-radius:4px}
-.page-d{display:none}
-html[data-theme=dark] .page-l{display:none}
-html[data-theme=dark] .page-d{display:block}
-.lang button[aria-pressed=true]{color:inherit!important}
+:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:4px}
+.dot{color:var(--accent)}
+.mono{font-family:var(--mono)}
+.eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.08em;color:var(--muted);line-height:1.6}
+.wrap{max-width:1440px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:clamp(20px,3vw,32px) var(--pad)}
 .logo{font-size:34px;font-weight:800;letter-spacing:-0.04em}
+.nav{display:flex;align-items:center;gap:clamp(16px,2.5vw,28px);font-family:var(--mono);font-size:14px}
+.lang{display:flex;gap:20px}
+.lang button{color:#8a8780}.lang button[aria-pressed=true]{color:var(--fg)}
+.pill{background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:999px;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:14px;background:var(--fg);color:var(--bg);padding:18px 28px;border-radius:999px;font-size:19px;font-weight:500}
+.btn .mono{font-size:13px;color:#8a8780}
+h1,h2,h3,p{margin:0}
+h2{font-weight:800;letter-spacing:-0.05em;line-height:.95;text-wrap:balance}
+.hero{padding:clamp(40px,7.5vw,96px) var(--pad) 24px;display:flex;flex-direction:column;gap:clamp(28px,4.5vw,56px)}
+.hero h1{font-size:clamp(54px,15.6vw,200px);font-weight:800;line-height:.86;letter-spacing:-0.065em}
+.hero-row{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:28px;padding-top:clamp(28px,3vw,40px);border-top:1px solid var(--line)}
+.lead{font-size:clamp(20px,2.2vw,28px);line-height:1.3;max-width:520px;color:var(--text);text-wrap:pretty}
+.cta{display:flex;flex-wrap:wrap-reverse;align-items:center;gap:16px 20px}
+.note{font-size:16px;color:var(--muted)}
+.score{padding:clamp(80px,10vw,140px) var(--pad) 0;display:flex;flex-direction:column;gap:clamp(20px,2.5vw,32px)}
+.score-board{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:clamp(32px,5vw,80px);align-items:end}
+.total{font-size:clamp(120px,17vw,230px);font-weight:800;line-height:.82;letter-spacing:-0.07em;font-variant-numeric:tabular-nums}
+.total-label{display:block;margin-top:16px;font-size:clamp(18px,1.7vw,22px);color:var(--muted)}
+.rows{list-style:none;margin:0;padding:0}
+/* Como la pantalla Hoy de la app: cada fuente con su color. Se prenden de a una y el total sube. */
+.rows li{display:grid;grid-template-columns:10px minmax(0,1fr) auto;gap:16px;align-items:center;padding:clamp(14px,1.6vw,20px) 0;border-top:1px solid var(--line);opacity:.18;transition:opacity .5s}
+.rows li:last-child{border-bottom:1px solid var(--line)}
+.rows li.on{opacity:1}
+.rows i{width:10px;height:10px;border-radius:50%}
+.rows i.irl-dot{background:#c2410c}
+html[data-theme=dark] .rows i.irl-dot{background:#ff8a5c}
+.rows b{display:block;font-size:clamp(19px,1.8vw,24px);font-weight:500;letter-spacing:-0.02em}
+.rows small{display:block;margin-top:2px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.rows span:last-child{font-size:clamp(19px,1.8vw,24px);font-weight:700;font-variant-numeric:tabular-nums}
+.irl{padding:clamp(96px,12vw,160px) var(--pad);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:clamp(48px,6vw,80px);align-items:start}
+.irl h2{font-size:clamp(46px,8.1vw,104px);line-height:.9;letter-spacing:-0.055em}
+.irl-text{display:flex;flex-direction:column;gap:clamp(20px,2.5vw,32px)}
+.irl-text p{font-size:clamp(18px,1.7vw,22px);line-height:1.5;color:var(--text);max-width:560px;text-wrap:pretty}
+.board{display:flex;flex-direction:column;gap:clamp(20px,2.5vw,28px)}
+.caption{display:flex;flex-direction:column;gap:10px;min-height:clamp(96px,9vw,120px)}
+.caption p{font-size:clamp(24px,2.6vw,34px);font-weight:700;letter-spacing:-0.03em;line-height:1.1;transition:opacity .3s}
+.steps-nav{display:flex;align-items:center;gap:16px}
+.steps-nav>button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);font-size:18px}
+.js-dots{display:flex;gap:8px}
+.js-dots button{width:10px;height:10px;border-radius:999px;background:color-mix(in srgb,var(--fg) 20%,transparent);transition:width .3s,background .3s}
+.js-dots button[aria-current=true]{width:28px;background:var(--accent)}
+.caption p.swap,.caption span.swap{animation:swap .45s ease-out}
+.pop{display:inline-block;animation:pop .4s ease-out}
+@keyframes swap{from{opacity:0;transform:translateY(14px)}}
+@keyframes pop{from{transform:scale(1.5);color:var(--accent)}}
+.irl-rows{touch-action:pan-y;display:flex;flex-direction:column;border-bottom:1px solid var(--line)}
+.irl-rows li{grid-template-columns:28px minmax(0,1fr) auto}
+.irl-rows li:last-child{border-bottom:0}
+.irl-rows i{width:auto;height:auto;background:none!important;font-style:normal;font-size:clamp(17px,1.6vw,20px);font-weight:700;color:var(--muted);transition:color .3s}
+.podium .irl-rows li:nth-child(n){opacity:.45}
+.podium .irl-rows li.top{opacity:1}
+.podium .irl-rows li.top i{color:var(--accent)}
+.pot{display:flex;align-items:baseline;gap:12px;font-family:var(--mono);font-size:14px;color:var(--muted);opacity:0;transition:opacity .5s}
+.pot b{font-family:'Schibsted Grotesk',sans-serif;font-size:clamp(26px,2.6vw,34px);font-weight:800;color:var(--accent)}
+.pot.on{opacity:1}
+.week{padding:clamp(96px,12vw,160px) var(--pad) 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:clamp(48px,6vw,96px);align-items:center}
+.week-main{display:flex;flex-direction:column;gap:clamp(28px,3vw,40px)}
+/* Las barras del widget: cada día se llena de abajo hacia arriba; el comodín queda en naranja claro. */
+.bars{display:grid;grid-template-columns:repeat(7,1fr);gap:clamp(6px,1vw,12px)}
+.bar{height:clamp(110px,12vw,170px);border-radius:12px;background:color-mix(in srgb,var(--fg) 8%,transparent);overflow:hidden;display:flex;align-items:flex-end}
+.bar i{display:block;width:100%;height:100%;background:var(--accent);transform:scaleY(0);transform-origin:bottom;transition:transform .5s ease-out}
+.bar.free i{background:color-mix(in srgb,var(--accent) 35%,var(--bg))}
+.bar.on i{transform:scaleY(1)}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:clamp(6px,1vw,12px);text-align:center;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-family:var(--mono);font-size:13px;color:var(--muted)}
+.legend span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:8px;background:var(--accent)}
+.legend span+span::before{background:color-mix(in srgb,var(--accent) 35%,var(--bg))}
+/* La tarjeta «Póster» que comparte la app, en HTML. Todo medido en cqw para que escale entera. */
+.share{overflow-x:clip;overflow-y:visible;padding:24px 12px;margin:-24px -12px;display:flex;flex-direction:column;align-items:center;gap:24px}
+/* Las cuatro tarjetas semanales de la app, en HTML, pasando como carrusel. Medidas de la app (1080 px) en cqw: px / 10.8. */
+.cards{container-type:inline-size;position:relative;width:min(100%,320px);aspect-ratio:9/16;transform:rotate(-2deg)}
+.card{position:absolute;inset:0;border-radius:4.5cqw;overflow:hidden;display:flex;flex-direction:column;opacity:0;transform:translateX(10%) scale(.96);transition:opacity .6s,transform .6s;box-shadow:0 30px 60px -30px #0006}
+.card.on{opacity:1;transform:none}
+.card.out{transform:translateX(-10%) scale(.96)}
+.wm{font-family:'Schibsted Grotesk',sans-serif;font-weight:800;letter-spacing:-0.04em}
+.wm span{color:#ff5a36}
+.c-num{background:#f4f4f1;color:#111;padding:8.9cqw}
+.c-top{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:3cqw;color:#6b6b66}
+.c-top .wm{font-size:7.8cqw;color:#111}
+.c-kicker{margin-top:14cqw;font-size:4.8cqw;font-weight:500;color:#6b6b66}
+.c-big{font-size:46cqw;font-weight:700;letter-spacing:-0.075em;line-height:.85;margin-top:3cqw}
+.c-big span{font-size:16.7cqw;color:#ff5a36;font-weight:600;letter-spacing:-0.04em}
+.c-sub{font-size:5.9cqw;font-weight:500;letter-spacing:-0.02em;margin-top:3cqw}
+.c-bars,.c-letters{display:grid;grid-template-columns:repeat(7,1fr);gap:1.85cqw}
+.c-bars{margin-top:auto;height:28cqw;align-items:end}
+.c-bars i{border-radius:1.7cqw;background:#e4e4df}
+.c-bars .met{background:#ff5a36}
+.c-letters{margin-top:2cqw;text-align:center;font-family:var(--mono);font-size:2.8cqw;color:#6b6b66}
+.c-stats{margin:4cqw 0 0;padding-top:4cqw;border-top:.3cqw solid #e4e4df;display:grid;grid-template-columns:repeat(4,1fr);gap:2cqw}
+.c-stats dt{font-size:5.4cqw;font-weight:700;letter-spacing:-0.03em}
+.c-stats dd{margin:0;font-size:2.6cqw;color:#6b6b66}
+.c-foot{margin-top:5cqw;font-size:4.8cqw;font-weight:600;letter-spacing:-0.02em}
+.c-ticket{background:#e9e8e2;justify-content:center}
+.paper{margin:0 8cqw;background:#fff;color:#111;padding:8cqw 6cqw;transform:rotate(-1.5deg);font-family:var(--mono);font-size:3cqw;display:flex;flex-direction:column;gap:1.6cqw;
+  -webkit-mask:radial-gradient(1.85cqw at 50% 0,#0000 98%,#000) 50% 0/3.7cqw 51% repeat-x,radial-gradient(1.85cqw at 50% 100%,#0000 98%,#000) 50% 100%/3.7cqw 51% repeat-x;
+  mask:radial-gradient(1.85cqw at 50% 0,#0000 98%,#000) 50% 0/3.7cqw 51% repeat-x,radial-gradient(1.85cqw at 50% 100%,#0000 98%,#000) 50% 100%/3.7cqw 51% repeat-x}
+.paper .wm{font-size:11cqw;text-align:center}
+.t-center{text-align:center}
+.t-muted{color:#6b6b66}
+.paper hr{width:100%;border:0;border-top:.37cqw dashed #111;margin:1.2cqw 0}
+.t-line{display:flex;justify-content:space-between;gap:2cqw}
+.t-line.off{color:#6b6b66}
+.t-total{display:flex;justify-content:space-between;align-items:baseline;font-family:'Schibsted Grotesk',sans-serif}
+.t-total span{font-size:3.7cqw;font-weight:600}
+.t-total b{font-size:10.4cqw;font-weight:700;letter-spacing:-0.04em}
+.t-code{height:9cqw;width:62%;margin:1.5cqw auto 0;background:repeating-linear-gradient(90deg,#111 0 .6cqw,#0000 .6cqw 1.2cqw,#111 1.2cqw 2.2cqw,#0000 2.2cqw 2.8cqw,#111 2.8cqw 3.1cqw,#0000 3.1cqw 3.9cqw)}
+.c-off{background:#0e0e0f;color:#f2f2ef;padding:8.9cqw;align-items:center;text-align:center}
+.glow{margin-top:6cqw;width:46cqw;height:46cqw;border-radius:50%;background:radial-gradient(circle,#ff5a366b 0,#ff5a361f 38%,#ff5a3600 70%);display:grid;place-items:center}
+.glow i{width:5.6cqw;height:5.6cqw;border-radius:50%;background:#ff5a36}
+.o-kicker{font-family:var(--mono);font-size:3cqw;letter-spacing:.08em;color:#9a9a96}
+.o-big{font-size:33cqw;font-weight:700;letter-spacing:-0.07em;line-height:1}
+.o-phrase{font-size:5.2cqw;color:#c9c9c4;line-height:1.25}
+.o-stats{margin-top:3cqw;font-size:3cqw;color:#9a9a96}
+.o-dots,.o-letters{display:flex;gap:3.3cqw}
+.o-dots{margin-top:auto}
+.o-dots i{width:4cqw;height:4cqw;border-radius:50%;border:.37cqw solid #2a2a2d;box-sizing:border-box}
+.o-dots .met{background:#ff5a36;border-color:#ff5a36}
+.o-letters{margin-top:1.5cqw;font-family:var(--mono);font-size:2.6cqw;color:#74746f}
+.o-letters span{width:4cqw}
+.o-foot{align-self:stretch;display:flex;justify-content:space-between;align-items:baseline;margin-top:6cqw}
+.o-foot .wm{font-size:6.7cqw}
+.o-foot span:last-child{font-size:4.1cqw;font-weight:600}
+.c-poster{background:#ff5a36;color:#0e0e0e;padding:8cqw}
+.poster-top{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--mono);font-size:3.6cqw}
+.poster-top .wm{font-size:9cqw}
+.poster-top .wm span{color:#f4f3ef}
+.c-poster h3{margin-top:auto;font-size:13cqw;font-weight:800;line-height:.95;letter-spacing:-0.06em}
+.c-poster h3 em{display:block;white-space:nowrap;font-style:normal;font-size:22cqw;line-height:.95;color:#f4f3ef;letter-spacing:-0.075em;margin:.05em 0}
+.c-poster dl{margin:9cqw 0 0;padding-top:4cqw;border-top:2px solid #0e0e0e;display:grid;grid-template-columns:1fr 1fr;gap:3cqw}
+.c-poster dt{font-size:8cqw;font-weight:800;letter-spacing:-0.04em;line-height:1}
+.c-poster dd{margin:0;font-size:3.6cqw}
+.picker{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;font-family:var(--mono);font-size:13px}
+.picker button{padding:7px 14px;border-radius:999px;color:var(--muted)}
+.picker button[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+.privacy{margin:0 clamp(12px,5vw,64px);background:var(--panel);color:var(--panel-fg);border-radius:clamp(22px,2.2vw,28px);padding:clamp(40px,6vw,88px) clamp(24px,4.4vw,56px);display:flex;flex-direction:column;align-items:center;gap:20px;text-align:center}
+.privacy h2{font-size:clamp(38px,5.6vw,72px)}
+.privacy p{font-family:var(--mono);font-size:clamp(14px,1.4vw,16px);line-height:1.6;color:var(--panel-text)}
+.end{padding:clamp(96px,12vw,160px) var(--pad) clamp(32px,5vw,64px);display:flex;flex-direction:column;align-items:center;gap:20px;text-align:center}
+footer{width:100%;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:clamp(56px,7vw,96px);font-family:var(--mono);font-size:13px;color:var(--muted)}
 #veil{position:fixed;left:0;top:0;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;pointer-events:none;z-index:50;transform:scale(0);opacity:0}
-@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+/* En el celu el botón grande de descarga ya está a la vista: la píldora de arriba sobra. */
+@media (max-width:480px){.pill{display:none}}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 <div id="veil" aria-hidden="true"></div>
+<div class="wrap">
 
-<!-- ============ CLARA ============ -->
-<div class="page-l" style="background:#f4f3ef;color:#0e0e0e;font-family:'Schibsted Grotesk',sans-serif;overflow-x:hidden">
-
-<header style="display:flex;justify-content:space-between;align-items:center;gap:16px;padding:clamp(20px,3vw,32px) clamp(20px,5vw,64px);max-width:1440px;margin:0 auto;box-sizing:border-box">
-<button class="logo js-theme" aria-label="Switch to dark mode" data-i18n-label="toDark">off<span class="js-dot" style="color:#ff5533">.</span></button>
-<div style="display:flex;align-items:center;gap:clamp(16px,2.5vw,28px);font-family:'JetBrains Mono',monospace;font-size:14px"><span class="lang" style="display:flex;gap:20px"><button data-lang="en" style="color:#8a8780">EN</button><button data-lang="es" style="color:#8a8780">ES</button></span><a href="https://github.com/martin-izq/off-app/releases/latest/download/off.apk" style="background:#0e0e0e;color:#f4f3ef;padding:10px 18px;border-radius:999px;white-space:nowrap" data-i18n="pillSmall">Download APK</a></div>
+<header>
+<button class="logo js-theme" aria-label="Switch color mode" data-i18n-label="toggle">off<span class="js-dot dot">.</span></button>
+<div class="nav"><span class="lang"><button data-lang="en">EN</button><button data-lang="es">ES</button></span><a class="pill" href="https://github.com/martin-izq/off-app/releases/latest/download/off.apk" data-i18n="pillSmall">Download APK</a></div>
 </header>
 
-<main style="max-width:1440px;margin:0 auto">
-<div style="padding:clamp(48px,7.5vw,96px) clamp(20px,5vw,64px) 24px;display:flex;flex-direction:column;gap:clamp(32px,4.5vw,56px)">
-<div style="font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.08em;color:#6b6964" data-i18n="eyebrowL">FREE · ANDROID</div>
-<h1 style="margin:0;font-size:clamp(72px,15.6vw,200px);font-weight:800;line-height:.86;letter-spacing:-0.065em" data-i18n="h1L">Life happens<br>off<span style="color:#ff5533">.</span></h1>
-<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:32px;padding-top:clamp(28px,3vw,40px);border-top:1px solid #0e0e0e">
-<p style="margin:0;font-size:clamp(21px,2.2vw,28px);line-height:1.3;max-width:520px;color:#2e2d2a;text-wrap:pretty" data-i18n="lead">A game you win by putting your phone down. Better with friends. Settled in person.</p>
-<div style="display:flex;flex-wrap:wrap-reverse;align-items:center;gap:16px 20px"><span style="font-size:16px;color:#6b6964" data-i18n="beta">Beta · Android 9+</span><a class="js-download" href="https://github.com/martin-izq/off-app/releases/latest/download/off.apk" style="display:flex;align-items:center;gap:14px;background:#0e0e0e;color:#f4f3ef;padding:18px 28px;border-radius:999px;font-size:19px;font-weight:500"><span data-i18n="download">Download</span> <span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8a8780">APK</span></a></div>
+<main>
+<!-- #download: el link que comparte la app abre acá, con el botón de descarga a la vista. -->
+<section class="hero" id="download">
+<h1 data-i18n="h1">Life happens<br>off<span class="dot">.</span></h1>
+<div class="hero-row">
+<p class="lead" data-i18n="lead">Put your phone down. Score points.</p>
+<div class="cta"><a class="btn" href="https://github.com/martin-izq/off-app/releases/latest/download/off.apk"><span data-i18n="download">Download</span> <span class="mono">APK</span></a></div>
 </div>
-</div>
+</section>
 
-<div style="padding:clamp(80px,9vw,120px) clamp(20px,5vw,64px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),auto));gap:clamp(24px,5vw,64px)">
-<div style="font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.06em;color:#6b6964;line-height:1.6;width:240px" data-i18n="goodL">THE GOOD PART STARTS<br>WHEN IT GOES DARK.</div>
-<div style="display:flex;flex-wrap:wrap;column-gap:clamp(10px,1.5vw,20px);row-gap:4px;font-size:clamp(30px,4vw,52px);font-weight:700;letter-spacing:-0.04em;line-height:1.15;max-width:960px">
-<span data-i18n="m1">The after-dinner talk that runs late</span><span style="color:#ff5533">·</span><span data-i18n="m2">The joke you actually caught</span><span style="color:#ff5533">·</span><span data-i18n="m3">The sunset, unfiltered</span><span style="color:#ff5533">·</span><span data-i18n="m4">A real nap</span><span style="color:#ff5533">·</span><span data-i18n="m5">The goal you saw live</span><span style="color:#ff5533">·</span><span data-i18n="m6">The whole movie, no second screen</span><span style="color:#ff5533">·</span><span data-i18n="m7">The walk with nowhere to be</span><span style="color:#ff5533">·</span><span data-i18n="m8">The conversation nobody recorded</span>
+<section class="score">
+<div class="eyebrow" data-i18n="howScore">HOW YOU SCORE</div>
+<div class="score-board">
+<div><div class="total js-total">0</div><span class="total-label" data-i18n="totalLabel">points today</span></div>
+<ul class="rows">
+<li data-v="7"><i style="background:#ff5a36"></i><span><b data-i18n="p1">Screen-off time</b><small data-i18n="d1">3 h 30 min</small></span><span>+7</span></li>
+<li data-v="4"><i style="background:#4f9ad6"></i><span><b data-i18n="p2">Steps</b><small data-i18n="d2">6,400 with your phone locked</small></span><span>+4</span></li>
+<li data-v="3"><i style="background:#8e7bd6"></i><span><b data-i18n="p3">Exercise</b><small data-i18n="d3">45 min</small></span><span>+3</span></li>
+<li data-v="2"><i style="background:#d9719a"></i><span><b data-i18n="p5">Fewer unlocks</b><small data-i18n="d5">below your average</small></span><span>+2</span></li>
+<li data-v="6"><i class="irl-dot"></i><span><b>IRL</b><small data-i18n="d6">2 h with friends, phones locked</small></span><span>+6</span></li>
+<li data-v="-4"><i style="background:#c08a1e"></i><span><b data-i18n="p4">Social media</b><small data-i18n="d4">20 min over your average</small></span><span>−4</span></li>
+</ul>
 </div>
-</div>
+</section>
 
-<div style="margin:0 clamp(12px,5vw,64px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:clamp(12px,2vw,24px)">
-<div style="background:#0e0e0e;color:#f3f2ee;border-radius:clamp(22px,2.2vw,28px);padding:clamp(28px,4vw,48px);display:flex;flex-direction:column;justify-content:space-between;gap:clamp(40px,5vw,64px);min-height:min(480px,110vw)">
-<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.06em;color:#8a8780"><span data-i18n="warmup">WARM-UP</span><span><span data-i18n="recordL">RECORD</span> <span class="js-record">0</span> S</span></div>
-<div style="font-size:clamp(120px,17vw,220px);font-weight:800;line-height:.9;letter-spacing:-0.07em;font-variant-numeric:tabular-nums"><span class="js-idle">0</span><span style="color:#ff5533">s</span></div>
-<div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:clamp(26px,2.4vw,30px);font-weight:700;letter-spacing:-0.03em" data-i18n="tryIt">Try it. Don't touch anything.</span><span style="font-size:17px;line-height:1.4;color:#8a8780" data-i18n="tryItSub">No scrolling, no clicking, no moving the mouse. Just let the counter run.</span></div>
+<section class="week">
+<div class="week-main">
+<div class="eyebrow" data-i18n="yourWeek">YOUR WEEK</div>
+<div><div class="total js-streak">7</div><span class="total-label" data-i18n="streakLabel">day streak</span></div>
+<div>
+<div class="bars js-bars"><div class="bar"><i></i></div><div class="bar"><i></i></div><div class="bar"><i></i></div><div class="bar"><i></i></div><div class="bar"><i></i></div><div class="bar free"><i></i></div><div class="bar"><i></i></div></div>
+<div class="days" style="margin-top:10px"><span data-i18n="wd0">M</span><span data-i18n="wd1">T</span><span data-i18n="wd2">W</span><span data-i18n="wd3">T</span><span data-i18n="wd4">F</span><span data-i18n="wd5">S</span><span data-i18n="wd6">S</span></div>
 </div>
-<div style="background:#e9e7e1;border-radius:clamp(22px,2.2vw,28px);padding:clamp(28px,4vw,48px);display:flex;flex-direction:column;justify-content:space-between;gap:40px">
-<div class="js-dots" data-rest="#d3d0c8" style="display:grid;grid-template-columns:repeat(19,1fr);gap:clamp(3px,.4vw,5px)" aria-hidden="true"></div>
-<div style="display:flex;flex-direction:column;gap:12px">
-<div style="display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 16px"><span style="font-size:clamp(88px,9.4vw,120px);font-weight:800;line-height:.8;letter-spacing:-0.06em">61</span><span style="font-size:clamp(28px,2.8vw,36px);font-weight:700;letter-spacing:-0.03em" data-i18n="days">days a year.</span></div>
-<p style="margin:0;font-size:18px;line-height:1.4;color:#2e2d2a" data-i18n="daysSub">That's what 4 hours of phone a day adds up to. What would you do with two months back?</p>
-<span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#6b6964" data-i18n="daysMath">4 h × 365 days = 1,460 hours.</span>
+<div class="legend"><span data-i18n="goalMet">goal met</span><span data-i18n="freePass">free pass, one a week</span></div>
+</div>
+<div class="share">
+<div class="eyebrow" data-i18n="shareWeek">SHARE YOUR WEEK</div>
+<div class="cards js-cards" aria-label="Weekly cards you can share" data-i18n-label="posterLabel">
+<div class="card c-num">
+<div class="c-top"><b class="wm">off<span>.</span></b><span data-i18n="cRange">OCT 19–25</span></div>
+<p class="c-kicker" data-i18n="cMyWeek">My week off</p>
+<div class="c-big">29<span>h</span></div>
+<p class="c-sub" data-i18n="cFaceDown">with my phone face down</p>
+<div class="c-bars"><i class="met" style="height:100%"></i><i class="met" style="height:87%"></i><i class="met" style="height:93%"></i><i class="met" style="height:77%"></i><i class="met" style="height:83%"></i><i class="" style="height:50%"></i><i class="met" style="height:90%"></i></div>
+<div class="c-letters"><span data-i18n="wd0">M</span><span data-i18n="wd1">T</span><span data-i18n="wd2">W</span><span data-i18n="wd3">T</span><span data-i18n="wd4">F</span><span data-i18n="wd5">S</span><span data-i18n="wd6">S</span></div>
+<dl class="c-stats"><div><dt>113</dt><dd data-i18n="pc1">points</dd></div><div><dt>14</dt><dd data-i18n="pc2">day streak</dd></div><div><dt>1 h</dt><dd data-i18n="pc3">of exercise</dd></div><div><dt data-i18n="pc4n">10,491</dt><dd data-i18n="pc4">steps</dd></div></dl>
+<p class="c-foot" data-i18n="cCounts">What happens off, counts.</p>
+</div>
+<div class="card c-ticket"><div class="paper">
+<b class="wm">off<span>.</span></b>
+<div class="t-center" style="letter-spacing:.12em" data-i18n="cReceipt">WEEKLY RECEIPT</div>
+<div class="t-center t-muted">19.10.2026 – 25.10.2026</div>
+<hr>
+<div class="t-line"><span><span data-i18n="dd0">MON</span> · <span data-i18n="cGoal">GOAL</span></span><span>5:00</span></div>
+<div class="t-line"><span><span data-i18n="dd1">TUE</span> · <span data-i18n="cGoal">GOAL</span></span><span>4:20</span></div>
+<div class="t-line"><span><span data-i18n="dd2">WED</span> · <span data-i18n="cGoal">GOAL</span></span><span>4:40</span></div>
+<div class="t-line"><span><span data-i18n="dd3">THU</span> · <span data-i18n="cGoal">GOAL</span></span><span>3:50</span></div>
+<div class="t-line"><span><span data-i18n="dd4">FRI</span> · <span data-i18n="cGoal">GOAL</span></span><span>4:10</span></div>
+<div class="t-line off"><span><span data-i18n="dd5">SAT</span></span><span>2:30</span></div>
+<div class="t-line"><span><span data-i18n="dd6">SUN</span> · <span data-i18n="cGoal">GOAL</span></span><span>4:30</span></div>
+<hr>
+<div class="t-total"><span>TOTAL OFF</span><b>29 h</b></div>
+<div class="t-line"><span data-i18n="tPoints">POINTS</span><span>113</span></div>
+<div class="t-line"><span data-i18n="tStreak">STREAK</span><span data-i18n="tStreakV">14 DAYS</span></div>
+<div class="t-line"><span data-i18n="tExercise">EXERCISE</span><span>1 H</span></div>
+<div class="t-line"><span data-i18n="tSteps">STEPS, PHONE LOCKED</span><span data-i18n="pc4n">10,491</span></div>
+<hr>
+<div class="t-center" style="letter-spacing:.06em" data-i18n="cThanks">THANKS FOR NOT SCROLLING</div>
+<div class="t-code"></div>
+</div></div>
+<div class="card c-off">
+<div class="glow"><i></i></div>
+<div class="o-kicker" data-i18n="cScreenOff">THIS WEEK, SCREEN OFF</div>
+<div class="o-big">29 h</div>
+<p class="o-phrase" data-i18n="cWon">I won back 29 hours from my phone.</p>
+<p class="o-stats" data-i18n="cStats">113 points · 14 day streak · 1 h of exercise</p>
+<div class="o-dots"><i class="met"></i><i class="met"></i><i class="met"></i><i class="met"></i><i class="met"></i><i class=""></i><i class="met"></i></div>
+<div class="o-letters"><span data-i18n="wd0">M</span><span data-i18n="wd1">T</span><span data-i18n="wd2">W</span><span data-i18n="wd3">T</span><span data-i18n="wd4">F</span><span data-i18n="wd5">S</span><span data-i18n="wd6">S</span></div>
+<div class="o-foot"><b class="wm">off<span>.</span></b><span data-i18n="cLife">Life happens off.</span></div>
+</div>
+<div class="card c-poster">
+<div class="poster-top"><b class="wm">off<span>.</span></b><span data-i18n="weekNo">WEEK 43</span></div>
+<h3 data-i18n="posterHead">This week<br>I won back<em>29 hours</em>from my phone.</h3>
+<dl>
+<div><dt>113</dt><dd data-i18n="pc1">points</dd></div>
+<div><dt>14</dt><dd data-i18n="pc2">day streak</dd></div>
+<div><dt>1 h</dt><dd data-i18n="pc3">of exercise</dd></div>
+<div><dt data-i18n="pc4n">10,491</dt><dd data-i18n="pc4">steps</dd></div>
+</dl>
 </div>
 </div>
+<div class="picker js-picker"><button data-i18n="kNum">Number</button><button data-i18n="kTicket">Receipt</button><button data-i18n="kOff">Lights off</button><button data-i18n="kPoster">Poster</button></div>
 </div>
+</section>
 
-<div style="padding:clamp(96px,12vw,160px) clamp(20px,5vw,64px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:clamp(48px,6vw,80px);align-items:start">
-<div style="display:flex;flex-direction:column;gap:clamp(24px,3vw,40px)">
-<h2 style="margin:0;font-size:clamp(52px,8.1vw,104px);font-weight:800;line-height:.9;letter-spacing:-0.055em;text-wrap:balance" data-i18n="pays">First to unlock pays<span style="color:#ff5533">.</span></h2>
-<p style="margin:0;font-size:clamp(18px,1.7vw,22px);line-height:1.5;color:#2e2d2a;max-width:560px;text-wrap:pretty" data-i18n="dare">Not a detox. Not a blocker. Nobody's going to lecture you. It's a dare: you win by not being there, and you celebrate face to face.</p>
+<section class="irl">
+<div class="irl-text">
+<div class="eyebrow">IRL</div>
+<h2 data-i18n="pays">Social, actually social<span class="dot">.</span></h2>
+<p data-i18n="irlIntro">Meet up in real life and compete with your points. Make the podium and score even more.</p>
 </div>
-<div style="background:#fff;border-radius:6px;padding:clamp(24px,3vw,36px) clamp(20px,2.5vw,32px);font-family:'JetBrains Mono',monospace;font-size:16px;line-height:1.5;box-shadow:0 1px 0 #0001,0 20px 40px -24px #0003;display:flex;flex-direction:column;gap:20px;max-width:520px">
-<div style="display:flex;justify-content:space-between;font-size:13px;color:#6b6964;letter-spacing:.06em"><span data-i18n="table">OFF. · THE TABLE</span><span data-i18n="tableNo">TABLE 04</span></div>
-<div style="border-top:1px dashed #0e0e0e55"></div>
-<div style="display:grid;grid-template-columns:36px minmax(0,1fr);gap:8px"><span style="color:#6b6964">01</span><span data-i18n="s1">Get together. Phones face down on the table.</span></div>
-<div style="display:grid;grid-template-columns:36px minmax(0,1fr);gap:8px"><span style="color:#6b6964">02</span><span data-i18n="s2">Every stretch nobody touches theirs counts for everyone.</span></div>
-<div style="display:grid;grid-template-columns:36px minmax(0,1fr);gap:8px"><span style="color:#ff5533">03</span><span data-i18n="s3">Whoever grabs it first pays into the pot.</span></div>
-<div style="display:grid;grid-template-columns:36px minmax(0,1fr);gap:8px"><span style="color:#6b6964">04</span><span data-i18n="s4">The pot is settled next time you meet. In person, never online.</span></div>
-<div style="border-top:1px dashed #0e0e0e55"></div>
-<div style="display:flex;justify-content:space-between;font-weight:500"><span data-i18n="toPay">TO PAY</span><span data-i18n="inPerson">in person</span></div>
+<div class="board js-irl">
+<div class="caption"><span class="eyebrow"><span class="js-stepno">01 / 04</span> <span class="js-clock"></span></span><p class="js-caption">Get together and lock your phones.</p></div>
+<ul class="rows irl-rows">
+<li data-share="2"><i></i><span><b data-i18n="you">You</b><small class="js-status"></small></span><span></span></li>
+<li data-share="2"><i></i><span><b>Juli</b><small class="js-status"></small></span><span></span></li>
+<li data-first><i></i><span><b>Tomi</b><small class="js-status"></small></span><span></span></li>
+<li data-share="1" data-late><i></i><span><b>Caro</b><small class="js-status"></small></span><span></span></li>
+</ul>
+<div class="pot js-pot"><span data-i18n="potLabel">Pot</span> <b>5</b></div>
+<div class="steps-nav"><button class="js-prev" aria-label="Previous step" data-i18n-label="prev">←</button><span class="js-dots"><button aria-label="1"></button><button aria-label="2"></button><button aria-label="3"></button><button aria-label="4"></button></span><button class="js-next" aria-label="Next step" data-i18n-label="next">→</button></div>
 </div>
-</div>
+</section>
 
-<div style="padding:0 clamp(20px,5vw,64px) clamp(96px,12vw,160px);display:flex;flex-direction:column;gap:clamp(32px,4vw,48px)">
-<div style="display:flex;flex-wrap:wrap-reverse;justify-content:space-between;align-items:baseline;gap:16px"><h2 style="margin:0;font-size:clamp(44px,5.6vw,72px);font-weight:800;letter-spacing:-0.05em;line-height:1" data-i18n="better">Better with someone.</h2><span style="font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.08em;color:#6b6964" data-i18n="whoPlays">WHO PLAYS</span></div>
-<div style="display:flex;flex-direction:column">
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:8px 48px;padding:clamp(24px,2.5vw,32px) 0;border-top:1px solid #0e0e0e"><span style="font-size:clamp(34px,3.8vw,48px);font-weight:700;letter-spacing:-0.04em" data-i18n="w1">Friends</span><span style="font-size:clamp(20px,2vw,26px);line-height:1.3;color:#2e2d2a;align-self:center" data-i18n="w1s">Fewer stories posted. More stories told.</span></div>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:8px 48px;padding:clamp(24px,2.5vw,32px) 0;border-top:1px solid #0e0e0e"><span style="font-size:clamp(34px,3.8vw,48px);font-weight:700;letter-spacing:-0.04em" data-i18n="w2">Couples</span><span style="font-size:clamp(20px,2vw,26px);line-height:1.3;color:#2e2d2a;align-self:center" data-i18n="w2s">Two phones down. One whole night.</span></div>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:8px 48px;padding:clamp(24px,2.5vw,32px) 0;border-top:1px solid #0e0e0e;border-bottom:1px solid #0e0e0e"><span style="font-size:clamp(34px,3.8vw,48px);font-weight:700;letter-spacing:-0.04em" data-i18n="w3">Exam week</span><span style="font-size:clamp(20px,2vw,26px);line-height:1.3;color:#2e2d2a;align-self:center" data-i18n="w3s">Two hours off. One exam nailed.</span></div>
-</div>
-</div>
+<section class="privacy">
+<h2 data-i18n="stays">What happens off, stays off<span class="dot">.</span></h2>
+<p data-i18n="noList">No account, no servers, no ads. Nothing leaves your phone.</p>
+</section>
 
-<div style="margin:0 clamp(12px,5vw,64px);background:#0e0e0e;color:#f3f2ee;border-radius:clamp(22px,2.2vw,28px);padding:clamp(36px,5.6vw,72px) clamp(24px,4.4vw,56px);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,400px),1fr));gap:clamp(40px,4.4vw,56px)">
-<div style="display:flex;flex-direction:column;gap:28px">
-<h2 style="margin:0;font-size:clamp(40px,4.7vw,60px);font-weight:800;letter-spacing:-0.05em;line-height:.95;text-wrap:balance" data-i18n="stays">What happens off, stays off<span style="color:#ff5533">.</span></h2>
-<div style="font-family:'JetBrains Mono',monospace;font-size:17px;line-height:1.9;color:#b5b2ab" data-i18n="noList">No account<br>No servers<br>No ads<br><span style="color:#f3f2ee">Nothing leaves your phone</span></div>
-</div>
-<div style="display:flex;flex-direction:column;gap:16px;justify-content:flex-end;border-top:1px solid #262624;padding-top:32px">
-<h3 style="margin:0;font-size:clamp(28px,2.8vw,36px);font-weight:700;letter-spacing:-0.03em" data-i18n="free">Free. Fueled by coffee.</h3>
-<p style="margin:0;font-size:18px;line-height:1.5;color:#b5b2ab;text-wrap:pretty" data-i18n="freeSub">Off is free and stays free. If it gives you hours back, you'll be able to buy us a coffee on Ko-fi or Cafecito once we launch. Donations never unlock anything.</p>
-</div>
-</div>
-
-<div style="padding:clamp(96px,12vw,160px) clamp(20px,5vw,64px) clamp(32px,5vw,64px);display:flex;flex-direction:column;align-items:center;gap:clamp(28px,3vw,40px);text-align:center">
-<h2 style="margin:0;font-size:clamp(52px,9.4vw,120px);font-weight:800;line-height:.9;letter-spacing:-0.06em" data-i18n="close">Switch off. Go out.<br>Come back with stories<span style="color:#ff5533">.</span></h2>
-<a class="js-download" href="https://github.com/martin-izq/off-app/releases/latest/download/off.apk" style="display:flex;align-items:center;gap:14px;background:#0e0e0e;color:#f4f3ef;padding:20px 30px;border-radius:999px;font-size:20px;font-weight:500"><span data-i18n="download">Download</span> <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#8a8780">APK</span></a>
-<div style="width:100%;display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;padding-top:clamp(56px,7vw,96px);font-family:'JetBrains Mono',monospace;font-size:13px;color:#6b6964"><span>off. · 2026 · <a href="privacy" data-i18n="privacy">Privacy</a></span><span data-i18n="onlyAndroid">Android only, for now.</span></div>
-</div>
-</main>
-</div>
-
-<!-- ============ OSCURA ============ -->
-<div class="page-d" style="background:#0e0e0e;color:#f3f2ee;font-family:'Schibsted Grotesk',sans-serif;overflow-x:hidden">
-
-<header style="display:flex;justify-content:space-between;align-items:center;padding:clamp(20px,3vw,32px) clamp(20px,5vw,64px);max-width:1440px;margin:0 auto;box-sizing:border-box">
-<button class="logo js-theme" aria-label="Switch to light mode" data-i18n-label="toLight">off<span class="js-dot" style="color:#ff5533">.</span></button>
-<div class="lang" style="display:flex;gap:20px;font-family:'JetBrains Mono',monospace;font-size:14px"><button data-lang="en" style="color:#8a8780">EN</button><button data-lang="es" style="color:#8a8780">ES</button></div>
-</header>
-
-<main style="max-width:1440px;margin:0 auto">
-<div style="padding:clamp(40px,6vw,72px) clamp(20px,5vw,64px) 0;display:flex;flex-direction:column;gap:clamp(24px,3vw,40px)">
-<div style="font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.08em;color:#8a8780;line-height:1.6" data-i18n="eyebrowD">FREE · ANDROID · BETA</div>
-<h1 style="margin:0;font-size:clamp(72px,17vw,232px);font-weight:800;line-height:.86;letter-spacing:-0.065em" data-i18n="h1D">Life<br>happens off<span style="color:#ff5533">.</span></h1>
-</div>
-<div style="padding:clamp(40px,5vw,64px) clamp(20px,5vw,64px) clamp(72px,9vw,120px);display:flex;flex-wrap:wrap;justify-content:space-between;gap:32px;align-items:flex-end">
-<p style="margin:0;font-size:clamp(21px,2.3vw,30px);line-height:1.3;letter-spacing:-0.01em;max-width:520px;text-wrap:pretty" data-i18n="lead">A game you win by putting your phone down. Better with friends. Settled in person.</p>
-<a class="js-download" href="https://github.com/martin-izq/off-app/releases/latest/download/off.apk" style="display:flex;align-items:center;gap:14px;background:#f3f2ee;color:#0e0e0e;padding:20px 30px;border-radius:999px;font-size:20px;font-weight:500"><span data-i18n="download">Download</span> <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#6b6964">APK</span></a>
-</div>
-
-<div style="margin:0 clamp(12px,5vw,64px);background:#000;border-radius:clamp(24px,3vw,40px);padding:clamp(28px,4.5vw,56px);display:flex;flex-direction:column;gap:clamp(32px,4.5vw,56px)">
-<div style="display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px;font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.06em;color:#8a8780">
-<span data-i18n="warmup">WARM-UP</span>
-<span style="display:flex;align-items:center;gap:10px"><span style="width:8px;height:8px;border-radius:50%;background:#ff5533"></span><span data-i18n="recordD">YOUR BEST:</span> <span class="js-record">0</span> S</span>
-</div>
-<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:32px">
-<div style="font-size:clamp(120px,24vw,320px);font-weight:800;line-height:.9;letter-spacing:-0.07em;font-variant-numeric:tabular-nums"><span class="js-idle">0</span><span style="color:#ff5533">s</span></div>
-<div style="display:flex;flex-direction:column;gap:10px;max-width:340px;padding-bottom:8px">
-<div style="font-size:clamp(28px,2.8vw,36px);font-weight:700;letter-spacing:-0.03em;line-height:1.05" data-i18n="tryIt">Try it. Don't touch anything.</div>
-<div style="font-size:18px;line-height:1.4;color:#8a8780" data-i18n="tryItSub">No scrolling, no clicking, no moving the mouse. Just let the counter run.</div>
-</div>
-</div>
-</div>
-
-<div style="padding:clamp(96px,12vw,160px) clamp(20px,5vw,64px) clamp(80px,11vw,140px);display:flex;flex-direction:column;gap:clamp(28px,4vw,48px)">
-<div style="font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.08em;color:#8a8780" data-i18n="goodD">THE GOOD PART STARTS WHEN IT GOES DARK.</div>
-<div style="display:flex;flex-direction:column;font-size:clamp(34px,5.3vw,68px);font-weight:700;line-height:1.1;letter-spacing:-0.04em;text-wrap:balance">
-<span data-i18n="m1d">The after-dinner talk that runs late.</span>
-<span style="color:#55534f" data-i18n="m2d">The joke you actually caught.</span>
-<span data-i18n="m3d">The sunset, unfiltered.</span>
-<span style="color:#55534f" data-i18n="m4d">A real nap.</span>
-<span data-i18n="m5d">The goal you saw live.</span>
-<span style="color:#55534f" data-i18n="m6d">The whole movie, no second screen.</span>
-<span data-i18n="m7d">The walk with nowhere to be.</span>
-<span style="color:#55534f" data-i18n="m8d">The conversation nobody recorded.</span>
-</div>
-</div>
-
-<div style="padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);border-top:1px solid #262624;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:clamp(48px,6vw,72px);align-items:center">
-<div style="display:flex;flex-direction:column;gap:24px">
-<div style="font-size:clamp(140px,20vw,260px);font-weight:800;line-height:.82;letter-spacing:-0.07em;color:#ff5533">61</div>
-<div style="font-size:clamp(36px,4vw,52px);font-weight:700;letter-spacing:-0.04em;line-height:1" data-i18n="days">days a year.</div>
-<p style="margin:0;font-size:clamp(19px,1.9vw,24px);line-height:1.4;color:#b5b2ab;max-width:460px;text-wrap:pretty" data-i18n="daysSub">That's what 4 hours of phone a day adds up to. What would you do with two months back?</p>
-<div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#8a8780" data-i18n="daysMath">4 h × 365 days = 1,460 hours.</div>
-</div>
-<div class="js-dots" data-rest="#262624" style="display:grid;grid-template-columns:repeat(21,1fr);gap:clamp(3px,.5vw,7px)" aria-hidden="true"></div>
-</div>
-
-<div style="padding:clamp(88px,11vw,140px) clamp(20px,5vw,64px);border-top:1px solid #262624;display:flex;flex-direction:column;gap:clamp(48px,6vw,80px)">
-<h2 style="margin:0;font-size:clamp(52px,8.7vw,112px);font-weight:800;line-height:.92;letter-spacing:-0.055em;max-width:1000px;text-wrap:balance" data-i18n="pays">First to unlock pays<span style="color:#ff5533">.</span></h2>
-<div style="display:flex;flex-direction:column">
-<div style="display:grid;grid-template-columns:clamp(44px,9vw,120px) minmax(0,1fr);gap:clamp(12px,2.5vw,32px);padding:clamp(20px,2.2vw,28px) 0;border-top:1px solid #262624;font-size:clamp(22px,2.5vw,32px);letter-spacing:-0.02em;line-height:1.25"><span style="font-family:'JetBrains Mono',monospace;font-size:15px;color:#8a8780;padding-top:.4em">01</span><span data-i18n="s1">Get together. Phones face down on the table.</span></div>
-<div style="display:grid;grid-template-columns:clamp(44px,9vw,120px) minmax(0,1fr);gap:clamp(12px,2.5vw,32px);padding:clamp(20px,2.2vw,28px) 0;border-top:1px solid #262624;font-size:clamp(22px,2.5vw,32px);letter-spacing:-0.02em;line-height:1.25"><span style="font-family:'JetBrains Mono',monospace;font-size:15px;color:#8a8780;padding-top:.4em">02</span><span data-i18n="s2">Every stretch nobody touches theirs counts for everyone.</span></div>
-<div style="display:grid;grid-template-columns:clamp(44px,9vw,120px) minmax(0,1fr);gap:clamp(12px,2.5vw,32px);padding:clamp(20px,2.2vw,28px) 0;border-top:1px solid #262624;font-size:clamp(22px,2.5vw,32px);letter-spacing:-0.02em;line-height:1.25"><span style="font-family:'JetBrains Mono',monospace;font-size:15px;color:#ff5533;padding-top:.4em">03</span><span data-i18n="s3">Whoever grabs it first pays into the pot.</span></div>
-<div style="display:grid;grid-template-columns:clamp(44px,9vw,120px) minmax(0,1fr);gap:clamp(12px,2.5vw,32px);padding:clamp(20px,2.2vw,28px) 0;border-top:1px solid #262624;border-bottom:1px solid #262624;font-size:clamp(22px,2.5vw,32px);letter-spacing:-0.02em;line-height:1.25"><span style="font-family:'JetBrains Mono',monospace;font-size:15px;color:#8a8780;padding-top:.4em">04</span><span data-i18n="s4">The pot is settled next time you meet. In person, never online.</span></div>
-</div>
-<p style="margin:0;font-size:clamp(19px,1.9vw,24px);line-height:1.45;color:#b5b2ab;max-width:720px;text-wrap:pretty" data-i18n="dare">Not a detox. Not a blocker. Nobody's going to lecture you. It's a dare: you win by not being there, and you celebrate face to face.</p>
-</div>
-
-<div style="padding:clamp(88px,11vw,140px) clamp(20px,5vw,64px);border-top:1px solid #262624;display:flex;flex-direction:column;gap:clamp(40px,5vw,64px)">
-<div style="display:flex;flex-wrap:wrap-reverse;justify-content:space-between;align-items:baseline;gap:16px"><h2 style="margin:0;font-size:clamp(44px,6.3vw,80px);font-weight:800;letter-spacing:-0.05em;line-height:1" data-i18n="better">Better with someone.</h2><span style="font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:.08em;color:#8a8780" data-i18n="whoPlays">WHO PLAYS</span></div>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:clamp(32px,4vw,48px)">
-<div style="display:flex;flex-direction:column;gap:12px;padding-top:24px;border-top:2px solid #f3f2ee"><span style="font-size:clamp(30px,3.1vw,40px);font-weight:700;letter-spacing:-0.03em" data-i18n="w1">Friends</span><span style="font-size:20px;line-height:1.35;color:#b5b2ab" data-i18n="w1s">Fewer stories posted. More stories told.</span></div>
-<div style="display:flex;flex-direction:column;gap:12px;padding-top:24px;border-top:2px solid #f3f2ee"><span style="font-size:clamp(30px,3.1vw,40px);font-weight:700;letter-spacing:-0.03em" data-i18n="w2">Couples</span><span style="font-size:20px;line-height:1.35;color:#b5b2ab" data-i18n="w2s">Two phones down. One whole night.</span></div>
-<div style="display:flex;flex-direction:column;gap:12px;padding-top:24px;border-top:2px solid #f3f2ee"><span style="font-size:clamp(30px,3.1vw,40px);font-weight:700;letter-spacing:-0.03em" data-i18n="w3">Exam week</span><span style="font-size:20px;line-height:1.35;color:#b5b2ab" data-i18n="w3s">Two hours off. One exam nailed.</span></div>
-</div>
-</div>
-
-<div style="padding:clamp(88px,11vw,140px) clamp(20px,5vw,64px);border-top:1px solid #262624;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:clamp(40px,6vw,72px)">
-<h2 style="margin:0;font-size:clamp(44px,5.6vw,72px);font-weight:800;letter-spacing:-0.05em;line-height:.95;text-wrap:balance" data-i18n="stays">What happens off, stays off<span style="color:#ff5533">.</span></h2>
-<div style="display:flex;flex-direction:column;font-family:'JetBrains Mono',monospace;font-size:clamp(16px,1.6vw,20px)">
-<div style="display:flex;justify-content:space-between;gap:16px;padding:20px 0;border-top:1px solid #262624"><span data-i18n="tAccount">Account</span><span style="color:#ff5533" data-i18n="no">no</span></div>
-<div style="display:flex;justify-content:space-between;gap:16px;padding:20px 0;border-top:1px solid #262624"><span data-i18n="tServers">Servers</span><span style="color:#ff5533" data-i18n="no">no</span></div>
-<div style="display:flex;justify-content:space-between;gap:16px;padding:20px 0;border-top:1px solid #262624"><span data-i18n="tAds">Ads</span><span style="color:#ff5533" data-i18n="no">no</span></div>
-<div style="display:flex;justify-content:space-between;gap:16px;padding:20px 0;border-top:1px solid #262624;border-bottom:1px solid #262624"><span data-i18n="tData">Data off your phone</span><span style="color:#ff5533" data-i18n="none">none</span></div>
-</div>
-</div>
-
-<div style="padding:clamp(72px,9vw,120px) clamp(20px,5vw,64px);border-top:1px solid #262624;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr));gap:clamp(20px,6vw,72px)">
-<h3 style="margin:0;font-size:clamp(32px,3.4vw,44px);font-weight:700;letter-spacing:-0.035em;line-height:1" data-i18n="free">Free. Fueled by coffee.</h3>
-<p style="margin:0;font-size:clamp(18px,1.7vw,22px);line-height:1.5;color:#b5b2ab;text-wrap:pretty" data-i18n="freeSub">Off is free and stays free. If it gives you hours back, you'll be able to buy us a coffee on Ko-fi or Cafecito once we launch. Donations never unlock anything.</p>
-</div>
-
-<div style="padding:clamp(96px,12vw,160px) clamp(20px,5vw,64px) clamp(32px,5vw,72px);border-top:1px solid #262624;display:flex;flex-direction:column;gap:clamp(36px,4.5vw,56px)">
-<h2 style="margin:0;font-size:clamp(56px,11.7vw,150px);font-weight:800;line-height:.88;letter-spacing:-0.065em" data-i18n="close">Switch off. Go out.<br>Come back with stories<span style="color:#ff5533">.</span></h2>
-<div style="display:flex;flex-wrap:wrap;align-items:center;gap:20px 24px"><a class="js-download" href="https://github.com/martin-izq/off-app/releases/latest/download/off.apk" style="display:flex;align-items:center;gap:14px;background:#f3f2ee;color:#0e0e0e;padding:20px 30px;border-radius:999px;font-size:20px;font-weight:500"><span data-i18n="download">Download</span> <span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#6b6964">APK</span></a><span style="font-size:17px;color:#8a8780" data-i18n="onlyAndroid">Android only, for now.</span></div>
-<div style="display:flex;justify-content:space-between;padding-top:clamp(56px,7vw,96px);font-family:'JetBrains Mono',monospace;font-size:13px;color:#8a8780"><span>off. · 2026 · <a href="privacy" data-i18n="privacy">Privacy</a></span><span class="lang" style="display:flex;gap:8px"><button data-lang="en" style="color:#8a8780">EN</button>·<button data-lang="es" style="color:#8a8780">ES</button></span></div>
-</div>
+<section class="end">
+<a class="btn" href="https://github.com/martin-izq/off-app/releases/latest/download/off.apk"><span data-i18n="download">Download</span> <span class="mono">APK</span></a>
+<span class="note" data-i18n="onlyAndroid">Android 9+. Android only, for now.</span>
+<footer><span>off. · 2026 · <a href="privacy" data-i18n="privacy">Privacy</a> · <a href="https://github.com/martin-izq/off-app">GitHub</a></span><span class="lang"><button data-lang="en">EN</button><button data-lang="es">ES</button></span></footer>
+</section>
 </main>
 </div>
 
 <script>
-// El español; el inglés es el texto del HTML. Mismas claves en los dos diseños.
+// El español; el inglés es el texto del HTML.
 var ES = {
-  toDark: 'Pasar a modo oscuro', toLight: 'Pasar a modo claro',
-  pillSmall: 'Descargar APK', download: 'Descargar', beta: 'Beta · Android 9 o más',
-  eyebrowL: 'GRATIS · ANDROID', eyebrowD: 'GRATIS · ANDROID · BETA',
-  h1L: 'La vida pasa<br>off<span style="color:#ff5533">.</span>',
-  h1D: 'La vida<br>pasa off<span style="color:#ff5533">.</span>',
-  lead: 'Un juego que ganás soltando el celu. Con amigos es mejor. La cuenta se salda en persona.',
-  goodL: 'LO BUENO EMPIEZA<br>CUANDO SE APAGA.', goodD: 'LO BUENO EMPIEZA CUANDO SE APAGA.',
-  m1: 'La sobremesa que se estira', m2: 'El chiste que entendiste', m3: 'El atardecer sin filtro', m4: 'La siesta de verdad',
-  m5: 'El gol que viste en vivo', m6: 'La peli entera, sin segunda pantalla', m7: 'El mate que da la vuelta', m8: 'La charla que nadie grabó',
-  m1d: 'La sobremesa que se estira.', m2d: 'El chiste que entendiste.', m3d: 'El atardecer sin filtro.', m4d: 'La siesta de verdad.',
-  m5d: 'El gol que viste en vivo.', m6d: 'La peli entera, sin segunda pantalla.', m7d: 'El mate que da la vuelta.', m8d: 'La charla que nadie grabó.',
-  warmup: 'PRECALENTAMIENTO', recordL: 'RÉCORD', recordD: 'TU RÉCORD:',
-  tryIt: 'Probá. No toques nada.', tryItSub: 'Sin scrollear, sin clickear, sin mover el mouse. Dejá que corra el contador.',
-  days: 'días por año.', daysSub: 'Eso suman 4 horas de celu por día. ¿Qué harías con dos meses de vuelta?', daysMath: '4 h × 365 días = 1.460 horas.',
-  pays: 'El que desbloquea primero, paga<span style="color:#ff5533">.</span>',
-  dare: 'No es un detox. No es un bloqueador. Nadie te va a retar. Es un desafío: ganás cuando no estás, y lo festejás cara a cara.',
-  table: 'OFF. · LA MESA', tableNo: 'MESA 04',
-  s1: 'Se juntan. Celus boca abajo sobre la mesa.', s2: 'Cada rato que nadie toca el suyo suma para todos.',
-  s3: 'El primero que lo agarra pone en el pozo.', s4: 'El pozo se salda la próxima vez que se vean. En persona, nunca online.',
-  toPay: 'A PAGAR', inPerson: 'en persona',
-  better: 'Mejor con alguien.', whoPlays: 'QUIÉN JUEGA',
-  w1: 'Amigos', w1s: 'Menos stories. Más historias.', w2: 'Parejas', w2s: 'Dos celus boca abajo. Una noche entera.',
-  w3: 'Época de parciales', w3s: 'Dos horas off. Un parcial aprobado.',
-  stays: 'Lo que pasa off, queda off<span style="color:#ff5533">.</span>',
-  noList: 'Sin cuenta<br>Sin servidores<br>Sin publicidad<br><span style="color:#f3f2ee">Nada sale de tu teléfono</span>',
-  tAccount: 'Cuenta', tServers: 'Servidores', tAds: 'Publicidad', tData: 'Datos fuera de tu teléfono', no: 'no', none: 'nada',
-  free: 'Gratis. A base de café.',
-  freeSub: 'Off es gratis y va a seguir siéndolo. Si te devuelve horas, cuando lancemos vas a poder invitarnos un café en Ko-fi o Cafecito. Donar nunca desbloquea nada.',
-  close: 'Apagá. Salí.<br>Volvé con historias<span style="color:#ff5533">.</span>',
-  onlyAndroid: 'Por ahora, solo Android.', privacy: 'Privacidad'
+  toggle: 'Cambiar de modo',
+  pillSmall: 'Descargar APK', download: 'Descargar',
+  h1: 'La vida pasa<br>off<span class="dot">.</span>',
+  lead: 'Soltá el celu. Sumá puntos.',
+  howScore: 'CÓMO SUMÁS', totalLabel: 'puntos hoy',
+  p1: 'Pantalla apagada', d1: '3 h 30 min', p2: 'Pasos', d2: '6.400 con el celu bloqueado', p3: 'Ejercicio', d3: '45 min',
+  p5: 'Menos desbloqueos', d5: 'por debajo de tu promedio', d6: '2 h con amigos, celus bloqueados', p4: 'Redes sociales', d4: '20 min más que tu promedio',
+  pays: 'Social, social de verdad<span class="dot">.</span>',
+  irlIntro: 'Juntate en la vida real y competí con tus puntos. Subite al podio y sumá todavía más.',
+  you: 'Vos', potLabel: 'Pozo',
+  yourWeek: 'TU SEMANA', streakLabel: 'días de racha', goalMet: 'meta cumplida', freePass: 'comodín, uno por semana',
+  wd0: 'L', wd1: 'M', wd2: 'M', wd3: 'J', wd4: 'V', wd5: 'S', wd6: 'D',
+  shareWeek: 'COMPARTÍ TU SEMANA', kNum: 'Número', kTicket: 'Ticket', kOff: 'Apagado', kPoster: 'Póster',
+  cRange: '19–25 OCT', cMyWeek: 'Mi semana off', cFaceDown: 'con el celu boca abajo', cCounts: 'Lo que pasa off, cuenta.',
+  cReceipt: 'RESUMEN SEMANAL', cGoal: 'META', dd0: 'LUN', dd1: 'MAR', dd2: 'MIÉ', dd3: 'JUE', dd4: 'VIE', dd5: 'SÁB', dd6: 'DOM',
+  tPoints: 'PUNTOS', tStreak: 'RACHA', tStreakV: '14 DÍAS', tExercise: 'EJERCICIO', tSteps: 'PASOS SIN MIRARLO', cThanks: 'GRACIAS POR NO SCROLLEAR',
+  cScreenOff: 'ESTA SEMANA, PANTALLA APAGADA', cWon: 'Le gané 29 horas al celu.', cStats: '113 puntos · 14 días de racha · 1 h de ejercicio', cLife: 'La vida pasa off.',
+  prev: 'Paso anterior', next: 'Paso siguiente',
+  posterLabel: 'Tarjetas semanales para compartir', weekNo: 'SEMANA 43', posterHead: 'Esta semana<br>le gané<em>29 horas</em>al celu.',
+  pc1: 'puntos', pc2: 'días de racha', pc3: 'de ejercicio', pc4n: '10.491', pc4: 'pasos',
+  stays: 'Lo que pasa off, queda off<span class="dot">.</span>',
+  noList: 'Sin cuenta, sin servidores, sin publicidad. Nada sale de tu teléfono.',
+  onlyAndroid: 'Android 9+. Por ahora, solo Android.', privacy: 'Privacidad'
 };
-var lang = 'en';
 var english = new Map();
 document.querySelectorAll('[data-i18n]').forEach(function (el) { english.set(el, el.innerHTML); });
 document.querySelectorAll('[data-i18n-label]').forEach(function (el) { english.set(el, el.getAttribute('aria-label')); });
 
 function setLang(l) {
-  lang = l;
   document.documentElement.lang = l;
   document.title = l === 'es' ? 'off. — La vida pasa off.' : 'off. — Life happens off.';
   document.querySelectorAll('[data-i18n]').forEach(function (el) {
@@ -275,36 +359,8 @@ function setLang(l) {
     el.setAttribute('aria-label', l === 'es' ? ES[el.dataset.i18nLabel] : english.get(el));
   });
   document.querySelectorAll('.lang button').forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.lang === l); });
-  paintRecord();
   try { localStorage.setItem('off-lang', l); } catch (e) {}
 }
-
-// 61 de 365: los días que suman 4 horas de celu por día.
-document.querySelectorAll('.js-dots').forEach(function (g) {
-  var html = '';
-  for (var i = 0; i < 365; i++) html += '<div style="aspect-ratio:1;border-radius:50%;background:' + (i < 304 ? g.dataset.rest : '#ff5533') + '"></div>';
-  g.innerHTML = html;
-});
-
-// Precalentamiento: cuenta los segundos sin tocar nada; cualquier gesto lo vuelve a cero.
-var idle = 0, record = 0;
-try { record = parseInt(localStorage.getItem('off-idle-record') || '0', 10) || 0; } catch (e) {}
-function paintRecord() {
-  document.querySelectorAll('.js-record').forEach(function (el) { el.textContent = record.toLocaleString(lang === 'es' ? 'es-AR' : 'en-US'); });
-}
-function paintIdle() { document.querySelectorAll('.js-idle').forEach(function (el) { el.textContent = idle; }); }
-setInterval(function () {
-  idle++;
-  if (idle > record) {
-    record = idle;
-    try { localStorage.setItem('off-idle-record', String(record)); } catch (e) {}
-    paintRecord();
-  }
-  paintIdle();
-}, 1000);
-['mousemove', 'mousedown', 'keydown', 'wheel', 'touchstart', 'scroll'].forEach(function (e) {
-  addEventListener(e, function () { if (idle) { idle = 0; paintIdle(); } }, { passive: true, capture: true });
-});
 
 // Como en la app: tocar «off.» cambia de modo. Un círculo del fondo nuevo crece desde el punto, se cambia abajo y se desvanece.
 var veil = document.getElementById('veil');
@@ -351,13 +407,195 @@ document.querySelectorAll('.lang button').forEach(function (b) { b.addEventListe
 var saved = null;
 try { saved = localStorage.getItem('off-lang'); } catch (e) {}
 setLang(saved || ((navigator.language || 'en').toLowerCase().indexOf('es') === 0 ? 'es' : 'en'));
-paintIdle();
+// Cómo sumás: las fuentes se prenden de a una y el total cuenta hasta el resultado del día. Después vuelve a empezar.
+(function () {
+  var rows = [].slice.call(document.querySelectorAll('.score .rows li'));
+  var out = document.querySelector('.js-total');
+  var shown = 0;
+  function paint(n) { out.textContent = n < 0 ? '−' + -n : n; }
+  function countTo(to) {
+    var from = shown, t0 = performance.now();
+    shown = to;
+    (function tick(t) {
+      var k = Math.min(1, (t - t0) / 500);
+      paint(Math.round(from + (to - from) * k));
+      if (k < 1) requestAnimationFrame(tick);
+    })(t0);
+  }
+  var sum = rows.reduce(function (a, r) { return a + Number(r.dataset.v); }, 0);
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    rows.forEach(function (r) { r.classList.add('on'); });
+    return paint(sum);
+  }
+  function run() {
+    rows.forEach(function (r) { r.classList.remove('on'); });
+    countTo(0);
+    var total = 0;
+    rows.forEach(function (r, i) {
+      setTimeout(function () {
+        r.classList.add('on');
+        total += Number(r.dataset.v);
+        countTo(total);
+      }, 900 + i * 1000);
+    });
+    setTimeout(run, 900 + rows.length * 1000 + 3500);
+  }
+  run();
+})();
+// Tu semana: los días se llenan de lunes a domingo y la racha sube con cada uno.
+(function () {
+  var bars = [].slice.call(document.querySelectorAll('.js-bars .bar'));
+  var out = document.querySelector('.js-streak');
+  var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function run() {
+    bars.forEach(function (b) { b.classList.remove('on'); });
+    out.textContent = 7;
+    bars.forEach(function (b, i) {
+      setTimeout(function () { b.classList.add('on'); out.textContent = 8 + i; }, still ? 0 : 800 + i * 600);
+    });
+    if (!still) setTimeout(run, 800 + bars.length * 600 + 4000);
+  }
+  run();
+})();
 
-// El link que comparte la app termina en #download: lleva al botón de descarga del diseño que se ve.
-if (location.hash === '#download') {
-  var dl = [].find.call(document.querySelectorAll('.js-download'), function (a) { return a.offsetParent; });
-  if (dl) { dl.scrollIntoView({ block: 'center' }); dl.focus(); }
-}
+// IRL en cuatro pasos, como carrusel: avanza solo y se puede ir y volver con las flechas, los puntos o deslizando.
+// A la derecha de cada uno, lo que suma y resta en la juntada; al final se ordena el podio.
+// Caro llega media hora tarde: suma menos y por eso se lleva menos del pozo.
+(function () {
+  var board = document.querySelector('.js-irl');
+  var rows = [].slice.call(board.querySelectorAll('.irl-rows li'));
+  var caption = board.querySelector('.js-caption');
+  var stepNo = board.querySelector('.js-stepno');
+  var clock = board.querySelector('.js-clock');
+  var pot = board.querySelector('.js-pot');
+  var dots = [].slice.call(board.querySelectorAll('.js-dots button'));
+  var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var CAPTIONS = {
+    en: ['Get together and lock your phones.', 'While nobody touches theirs, everyone scores.', 'First to grab theirs pays into the pot.', 'The pot goes to those who held out: score more, take more.'],
+    es: ['Se juntan y bloquean los celus.', 'Mientras nadie lo toca, todos suman.', 'El primero que lo agarra pone en el pozo.', 'El pozo va para los que aguantaron: el que más sumó, más se lleva.']
+  };
+  var BLOCKS = 4, PER_BLOCK = 2, FINE = 5; // 2 h juntos: cada media hora todos suman 2
+  var current = 0, timer, timers = [];
+  function es() { return document.documentElement.lang === 'es'; }
+  function later(f, ms) { timers.push(setTimeout(f, still ? 0 : ms)); }
+  function swap(el, text) {
+    if (el.textContent === text) return;
+    el.textContent = text;
+    el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap');
+  }
+  function status(r, en, sp) { r.querySelector('.js-status').textContent = es() ? sp : en; }
+  function first(r) { return 'first' in r.dataset; }
+  function late(r) { return 'late' in r.dataset; }
+  function sum(r) { return '+' + (late(r) ? BLOCKS - 1 : BLOCKS) * PER_BLOCK; }
+  // La cuenta de la derecha: «+8», «+8 −5», «+8 +2». El último término entra con un golpe.
+  function terms(r, list) {
+    var cell = r.lastElementChild;
+    var html = list.map(function (t, i) { return i === list.length - 1 ? '<span class="pop">' + t + '</span>' : t; }).join(' ');
+    if (cell.textContent !== list.join(' ')) cell.innerHTML = html;
+    r.dataset.total = list.reduce(function (a, t) { return a + Number(t.replace('−', '-')); }, 0);
+  }
+  function hm(min) { return Math.floor(min / 60) + ':' + String(min % 60).padStart(2, '0'); }
+  function setClock(min) { clock.textContent = min === null ? '' : '· ' + hm(min) + (es() ? ' juntos' : ' together'); }
+  // El podio: ordena por lo sumado y cada fila se desliza a su puesto (FLIP).
+  function podium(on) {
+    var before = rows.map(function (r) { return r.getBoundingClientRect().top; });
+    var sorted = rows.slice().sort(function (a, b) { return b.dataset.total - a.dataset.total; });
+    rows.forEach(function (r) {
+      var i = sorted.indexOf(r);
+      r.style.order = on ? i : '';
+      r.firstElementChild.textContent = on ? (i + 1) + 'º' : '';
+      r.classList.toggle('top', on && i < 3);
+    });
+    if (still) return;
+    rows.forEach(function (r, i) {
+      var dy = before[i] - r.getBoundingClientRect().top;
+      if (dy) r.animate([{ transform: 'translateY(' + dy + 'px)' }, { transform: 'none' }], { duration: 600, easing: 'cubic-bezier(.2,.8,.2,1)' });
+    });
+  }
+  function render(n) {
+    timers.forEach(clearTimeout); timers = [];
+    swap(stepNo, '0' + (n + 1) + ' / 04');
+    swap(caption, CAPTIONS[es() ? 'es' : 'en'][n]);
+    dots.forEach(function (d, i) { d.setAttribute('aria-current', i === n); });
+    board.classList.toggle('podium', n === 3);
+    pot.classList.toggle('on', n >= 2);
+    setClock(n === 0 ? null : n === 1 ? 0 : BLOCKS * 30);
+    rows.forEach(function (r) {
+      r.classList.add('on');
+      r.classList.toggle('paid', n >= 2 && first(r));
+      status(r, 'locked', 'bloqueado');
+      terms(r, n === 0 || n === 1 ? [] : [sum(r)]);
+      if (late(r) && n >= 2) status(r, 'arrived late', 'llegó más tarde');
+    });
+    podium(false);
+    if (n === 0) {
+      rows.forEach(function (r, i) {
+        r.classList.remove('on'); status(r, 'phone in hand', 'con el celu en la mano');
+        if (late(r)) return status(r, 'not here yet', 'todavía no llegó');
+        later(function () { r.classList.add('on'); status(r, 'locked', 'bloqueado'); }, 300 + i * 350);
+      });
+    } else if (n === 1) {
+      rows.filter(late).forEach(function (r) { r.classList.remove('on'); status(r, 'not here yet', 'todavía no llegó'); });
+      for (var b = 1; b <= BLOCKS; b++) (function (b) {
+        later(function () {
+          setClock(b * 30);
+          rows.forEach(function (r) {
+            if (!late(r)) return terms(r, ['+' + b * PER_BLOCK]);
+            // Llega a la media hora: desde ahí suma como los demás.
+            if (b === 1) { r.classList.add('on'); status(r, 'arrived late', 'llegó más tarde'); }
+            else terms(r, ['+' + (b - 1) * PER_BLOCK]);
+          });
+        }, b * 750);
+      })(b);
+    } else {
+      rows.filter(first).forEach(function (r) {
+        status(r, 'unlocked first', 'desbloqueó primero');
+        if (n === 3) terms(r, [sum(r), '−' + FINE]);
+        else later(function () { terms(r, [sum(r), '−' + FINE]); }, 700);
+      });
+      if (n === 3) later(function () {
+        rows.forEach(function (r) {
+          if (r.dataset.share) { terms(r, [sum(r), '+' + r.dataset.share]); status(r, 'from the pot', 'del pozo'); }
+        });
+        podium(true);
+      }, 800);
+    }
+    current = n;
+    clearTimeout(timer);
+    if (!still) timer = setTimeout(function () { render((current + 1) % 4); }, [3200, 4600, 3600, 5500][n]);
+  }
+  function go(d) { render((current + d + 4) % 4); }
+  board.querySelector('.js-prev').addEventListener('click', function () { go(-1); });
+  board.querySelector('.js-next').addEventListener('click', function () { go(1); });
+  dots.forEach(function (d, i) { d.addEventListener('click', function () { render(i); }); });
+  var x0 = null;
+  board.addEventListener('pointerdown', function (e) { x0 = e.clientX; });
+  board.addEventListener('pointerup', function (e) {
+    if (x0 !== null && Math.abs(e.clientX - x0) > 40) go(e.clientX < x0 ? 1 : -1);
+    x0 = null;
+  });
+  render(still ? 3 : 0);
+})();
+
+// Compartí tu semana: las cuatro tarjetas pasan solas; tocar un nombre muestra esa.
+(function () {
+  var cards = [].slice.call(document.querySelectorAll('.js-cards .card'));
+  var buttons = [].slice.call(document.querySelectorAll('.js-picker button'));
+  var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var current = 0, timer;
+  function show(i) {
+    cards.forEach(function (c, j) {
+      c.classList.toggle('out', j === current && j !== i);
+      c.classList.toggle('on', j === i);
+    });
+    buttons.forEach(function (b, j) { b.setAttribute('aria-pressed', j === i); });
+    current = i;
+    clearTimeout(timer);
+    if (!still) timer = setTimeout(function () { show((current + 1) % cards.length); }, 3500);
+  }
+  buttons.forEach(function (b, i) { b.addEventListener('click', function () { show(i); }); });
+  show(0);
+})();
 </script>
 </body>
 </html>
