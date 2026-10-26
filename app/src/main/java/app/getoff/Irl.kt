@@ -648,16 +648,12 @@ private fun QrStep(
 
 private val QrInk = Color(0xFF111111)
 
-/** Gira la matriz 90° a la derecha: los tres cuadrados quedan arriba a la izquierda, arriba a la derecha y abajo a la derecha. */
-internal fun rotateCw(m: List<BooleanArray>): List<BooleanArray> = List(m[0].size) { r -> BooleanArray(m.size) { c -> m[m.size - 1 - c][r] } }
-
-/** El QR de off: siempre claro, módulos redondeados y el cuadrado de abajo a la derecha en naranja, como el punto de «off.». */
+/** El QR de off: estándar (cuadrado, negro sobre blanco) para que cualquier lector lo lea; la marca va en el centro. */
 @Composable
 private fun OffQr(text: String) {
     val m = remember(text) {
-        val hints = mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H, EncodeHintType.MARGIN to 0)
-        val bits = QRCodeWriter().encode(text, BarcodeFormat.QR_CODE, 0, 0, hints)
-        rotateCw(List(bits.height) { y -> BooleanArray(bits.width) { x -> bits[x, y] } })
+        val hints = mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H, EncodeHintType.MARGIN to 2)
+        QRCodeWriter().encode(text, BarcodeFormat.QR_CODE, 0, 0, hints)
     }
     val shape = RoundedCornerShape(24.dp)
     Box(
@@ -666,16 +662,10 @@ private fun OffQr(text: String) {
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.fillMaxSize()) {
-            val n = m.size
+            val n = m.width
             val cell = size.minDimension / n
-            val gap = cell * 0.1f
-            for (r in 0 until n) for (c in 0 until n) if (m[r][c]) {
-                val color = if (r >= n - 7 && c >= n - 7) Accent else QrInk
-                // Los tres cuadrados van macizos: con huecos entre módulos el lector no los encuentra y no escanea nada.
-                val finder = (r < 7 || r >= n - 7) && (c < 7 || c >= n - 7) && !(r >= n - 7 && c < 7)
-                if (finder) drawRect(color, Offset(c * cell, r * cell), Size(cell + 0.5f, cell + 0.5f))
-                else drawRoundRect(color, Offset(c * cell + gap / 2, r * cell + gap / 2), Size(cell - gap, cell - gap), CornerRadius(cell * 0.3f))
-            }
+            // Sin huecos ni redondeo ni color: con eso el lector de Google no lo encontraba.
+            for (y in 0 until n) for (x in 0 until n) if (m[x, y]) drawRect(QrInk, Offset(x * cell, y * cell), Size(cell + 0.5f, cell + 0.5f))
         }
         Row(Modifier.clip(RoundedCornerShape(10.dp)).background(Color.White).padding(horizontal = 9.dp, vertical = 4.dp)) {
             Text("off", color = QrInk, fontSize = 17.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp)

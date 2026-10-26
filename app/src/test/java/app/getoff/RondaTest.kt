@@ -103,17 +103,4 @@ class RondaTest {
         assertEquals(emptyList<Float>(), lockSegments(emptyList()))
     }
 
-    @Test fun rotationPutsFindersTopLeftTopRightBottomRight() {
-        val bits = com.google.zxing.qrcode.QRCodeWriter().encode("D1|M|n1|a,Ana,1,0,", com.google.zxing.BarcodeFormat.QR_CODE, 0, 0,
-            mapOf(com.google.zxing.EncodeHintType.MARGIN to 0))
-        val m = rotateCw(List(bits.height) { y -> BooleanArray(bits.width) { x -> bits[x, y] } })
-        val n = m.size
-        // El anillo de un cuadrado de búsqueda: borde negro de 7×7 y blanco adentro.
-        fun finder(r0: Int, c0: Int) = (0 until 7).all { m[r0][c0 + it] && m[r0 + 6][c0 + it] && m[r0 + it][c0] && m[r0 + it][c0 + 6] } &&
-            !m[r0 + 1][c0 + 1]
-        assertTrue(finder(0, 0) && finder(0, n - 7) && finder(n - 7, n - 7))
-        assertTrue(!finder(n - 7, 0))
-        // Girar cuatro veces vuelve al mismo.
-        assertEquals(m.map { it.toList() }, rotateCw(rotateCw(rotateCw(rotateCw(m)))).map { it.toList() })
-    }
 }
