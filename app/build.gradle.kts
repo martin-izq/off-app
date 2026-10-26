@@ -12,8 +12,8 @@ android {
         applicationId = "app.getoff"
         minSdk = 28
         targetSdk = 36
-        versionCode = 4
-        versionName = "0.4"
+        versionCode = 5
+        versionName = "0.5"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17

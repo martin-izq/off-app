@@ -1,5 +1,7 @@
 package app.getoff
 
+import androidx.compose.runtime.DisposableEffect
+import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -648,12 +650,19 @@ private fun QrStep(
 
 private val QrInk = Color(0xFF111111)
 
-/** El QR de off: estándar (cuadrado, negro sobre blanco) para que cualquier lector lo lea; la marca va en el centro. */
+/** El QR de off: estándar y lo menos denso posible (corrección M, sin logo) para que lo lean hasta las cámaras viejas. */
 @Composable
 private fun OffQr(text: String) {
     val m = remember(text) {
-        val hints = mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.H, EncodeHintType.MARGIN to 2)
+        val hints = mapOf(EncodeHintType.ERROR_CORRECTION to ErrorCorrectionLevel.M, EncodeHintType.MARGIN to 2)
         QRCodeWriter().encode(text, BarcodeFormat.QR_CODE, 0, 0, hints)
+    }
+    // Brillo al máximo mientras se muestra: con la pantalla oscura la cámara del otro no lo lee.
+    val window = (LocalContext.current as? Activity)?.window
+    DisposableEffect(window) {
+        val before = window?.attributes?.screenBrightness
+        window?.attributes = window?.attributes?.apply { screenBrightness = 1f }
+        onDispose { if (before != null) window.attributes = window.attributes.apply { screenBrightness = before } }
     }
     val shape = RoundedCornerShape(24.dp)
     Box(
@@ -666,10 +675,6 @@ private fun OffQr(text: String) {
             val cell = size.minDimension / n
             // Sin huecos ni redondeo ni color: con eso el lector de Google no lo encontraba.
             for (y in 0 until n) for (x in 0 until n) if (m[x, y]) drawRect(QrInk, Offset(x * cell, y * cell), Size(cell + 0.5f, cell + 0.5f))
-        }
-        Row(Modifier.clip(RoundedCornerShape(10.dp)).background(Color.White).padding(horizontal = 9.dp, vertical = 4.dp)) {
-            Text("off", color = QrInk, fontSize = 17.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp)
-            Text(".", color = Accent, fontSize = 17.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
