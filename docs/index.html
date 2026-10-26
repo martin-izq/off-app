@@ -295,12 +295,12 @@ footer{width:100%;display:flex;flex-wrap:wrap;justify-content:space-between;gap:
 <div class="board js-irl">
 <div class="caption"><span class="eyebrow"><span class="js-stepno">01 / 04</span> <span class="js-clock"></span></span><p class="js-caption">Get together and lock your phones.</p></div>
 <ul class="rows irl-rows">
-<li data-share="2"><i></i><span><b data-i18n="you">You</b><small class="js-status"></small></span><span></span></li>
-<li data-share="2"><i></i><span><b>Juli</b><small class="js-status"></small></span><span></span></li>
-<li data-first><i></i><span><b>Tomi</b><small class="js-status"></small></span><span></span></li>
-<li data-share="1" data-late><i></i><span><b>Caro</b><small class="js-status"></small></span><span></span></li>
+<li data-share="4"><i></i><span><b data-i18n="you">You</b><small class="js-status"></small></span><span></span></li>
+<li data-share="4" data-unlocks="1"><i></i><span><b>Juli</b><small class="js-status"></small></span><span></span></li>
+<li data-share="4" data-unlocks="2"><i></i><span><b>Tomi</b><small class="js-status"></small></span><span></span></li>
+<li data-share="3" data-late><i></i><span><b>Caro</b><small class="js-status"></small></span><span></span></li>
 </ul>
-<div class="pot js-pot"><span data-i18n="potLabel">Pot</span> <b>5</b></div>
+<div class="pot js-pot"><span data-i18n="potLabel">Pot</span> <b class="js-pot-n">0</b></div>
 <div class="steps-nav"><button class="js-prev" aria-label="Previous step" data-i18n-label="prev">←</button><span class="js-dots"><button aria-label="1"></button><button aria-label="2"></button><button aria-label="3"></button><button aria-label="4"></button></span><button class="js-next" aria-label="Next step" data-i18n-label="next">→</button></div>
 </div>
 </section>
@@ -460,7 +460,8 @@ setLang(saved || ((navigator.language || 'en').toLowerCase().indexOf('es') === 0
 
 // IRL en cuatro pasos, como carrusel: avanza solo y se puede ir y volver con las flechas, los puntos o deslizando.
 // A la derecha de cada uno, lo que suma y resta en la juntada; al final se ordena el podio.
-// Caro llega media hora tarde: suma menos y por eso se lleva menos del pozo.
+// Como en la app: cada desbloqueo paga 5 (Juli una vez, Tomi dos) y el pozo se reparte entre todos según lo sumado.
+// Caro llega media hora tarde: suma menos y por eso se lleva menos.
 (function () {
   var board = document.querySelector('.js-irl');
   var rows = [].slice.call(board.querySelectorAll('.irl-rows li'));
@@ -468,11 +469,12 @@ setLang(saved || ((navigator.language || 'en').toLowerCase().indexOf('es') === 0
   var stepNo = board.querySelector('.js-stepno');
   var clock = board.querySelector('.js-clock');
   var pot = board.querySelector('.js-pot');
+  var potN = board.querySelector('.js-pot-n');
   var dots = [].slice.call(board.querySelectorAll('.js-dots button'));
   var still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   var CAPTIONS = {
-    en: ['Get together and lock your phones.', 'While nobody touches theirs, everyone scores.', 'First to grab theirs pays into the pot.', 'The pot goes to those who held out: score more, take more.'],
-    es: ['Se juntan y bloquean los celus.', 'Mientras nadie lo toca, todos suman.', 'El primero que lo agarra pone en el pozo.', 'El pozo va para los que aguantaron: el que más sumó, más se lleva.']
+    en: ['Get together and lock your phones.', 'While nobody touches theirs, everyone scores.', 'Every unlock puts 5 into the pot.', 'The pot is split among everyone: score more, take more.'],
+    es: ['Se juntan y bloquean los celus.', 'Mientras nadie lo toca, todos suman.', 'Cada desbloqueo pone 5 en el pozo.', 'El pozo se reparte entre todos: el que más sumó, más se lleva.']
   };
   var BLOCKS = 4, PER_BLOCK = 2, FINE = 5; // 2 h juntos: cada media hora todos suman 2
   var current = 0, timer, timers = [];
@@ -484,7 +486,11 @@ setLang(saved || ((navigator.language || 'en').toLowerCase().indexOf('es') === 0
     el.classList.remove('swap'); void el.offsetWidth; el.classList.add('swap');
   }
   function status(r, en, sp) { r.querySelector('.js-status').textContent = es() ? sp : en; }
-  function first(r) { return 'first' in r.dataset; }
+  function unlocks(r) { return +(r.dataset.unlocks || 0); }
+  function fines(r) { var f = []; for (var k = 0; k < unlocks(r); k++) f.push('−' + FINE); return f; }
+  function times(n) { return es() ? (n === 1 ? '1 vez' : n + ' veces') : (n === 1 ? 'once' : n + ' times'); }
+  function paidStatus(r) { status(r, 'unlocked ' + times(unlocks(r)), 'desbloqueó ' + times(unlocks(r))); }
+  function potTo(v) { potN.innerHTML = '<span class="pop">' + v + '</span>'; }
   function late(r) { return 'late' in r.dataset; }
   function sum(r) { return '+' + (late(r) ? BLOCKS - 1 : BLOCKS) * PER_BLOCK; }
   // La cuenta de la derecha: «+8», «+8 −5», «+8 +2». El último término entra con un golpe.
@@ -522,7 +528,7 @@ setLang(saved || ((navigator.language || 'en').toLowerCase().indexOf('es') === 0
     setClock(n === 0 ? null : n === 1 ? 0 : BLOCKS * 30);
     rows.forEach(function (r) {
       r.classList.add('on');
-      r.classList.toggle('paid', n >= 2 && first(r));
+      r.classList.toggle('paid', n === 3 && unlocks(r) > 0);
       status(r, 'locked', 'bloqueado');
       terms(r, n === 0 || n === 1 ? [] : [sum(r)]);
       if (late(r) && n >= 2) status(r, 'arrived late', 'llegó más tarde');
@@ -547,22 +553,37 @@ setLang(saved || ((navigator.language || 'en').toLowerCase().indexOf('es') === 0
           });
         }, b * 750);
       })(b);
-    } else {
-      rows.filter(first).forEach(function (r) {
-        status(r, 'unlocked first', 'desbloqueó primero');
-        if (n === 3) terms(r, [sum(r), '−' + FINE]);
-        else later(function () { terms(r, [sum(r), '−' + FINE]); }, 700);
+    } else if (n === 2) {
+      // Desbloquean de a uno: cada vez, −5 en su cuenta y +5 en el pozo.
+      potTo(0);
+      var pot5 = 0, k = 0;
+      rows.forEach(function (r) {
+        for (var u = 1; u <= unlocks(r); u++) (function (u) {
+          later(function () {
+            terms(r, [sum(r)].concat(fines(r).slice(0, u)));
+            status(r, 'unlocked ' + times(u), 'desbloqueó ' + times(u));
+            r.classList.add('paid');
+            potTo(pot5 += FINE);
+          }, 600 + k++ * 800);
+        })(u);
       });
-      if (n === 3) later(function () {
+    } else {
+      var total = rows.reduce(function (a, r) { return a + unlocks(r) * FINE; }, 0);
+      potTo(total);
+      rows.forEach(function (r) { terms(r, [sum(r)].concat(fines(r))); if (unlocks(r)) paidStatus(r); });
+      later(function () {
         rows.forEach(function (r) {
-          if (r.dataset.share) { terms(r, [sum(r), '+' + r.dataset.share]); status(r, 'from the pot', 'del pozo'); }
+          terms(r, [sum(r)].concat(fines(r), '+' + r.dataset.share));
+          var u = unlocks(r);
+          status(r, (u ? 'unlocked ' + times(u) + ' · ' : '') + '+' + r.dataset.share + ' from the pot',
+            (u ? 'desbloqueó ' + times(u) + ' · ' : '') + '+' + r.dataset.share + ' del pozo');
         });
         podium(true);
-      }, 800);
+      }, 900);
     }
     current = n;
     clearTimeout(timer);
-    if (!still) timer = setTimeout(function () { render((current + 1) % 4); }, [3200, 4600, 3600, 5500][n]);
+    if (!still) timer = setTimeout(function () { render((current + 1) % 4); }, [3200, 4600, 4200, 6000][n]);
   }
   function go(d) { render((current + d + 4) % 4); }
   board.querySelector('.js-prev').addEventListener('click', function () { go(-1); });
