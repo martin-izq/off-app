@@ -21,8 +21,22 @@ android {
     }
     kotlinOptions { jvmTarget = "17" }
     buildFeatures { compose = true }
-    // Una copia aparte para probar sin tocar la instalación real: ./gradlew assembleDebug -PidSuffix=.prueba
-    buildTypes { getByName("debug") { applicationIdSuffix = providers.gradleProperty("idSuffix").orNull } }
+    // La clave de release vive fuera del repo, en ~/.gradle/gradle.properties (offStoreFile, offStorePassword,
+    // offKeyAlias, offKeyPassword). Es la misma para siempre: con otra, el APK nuevo no se instala encima.
+    val storeFile = providers.gradleProperty("offStoreFile").orNull
+    signingConfigs {
+        if (storeFile != null) create("release") {
+            this.storeFile = file(storeFile)
+            storePassword = providers.gradleProperty("offStorePassword").get()
+            keyAlias = providers.gradleProperty("offKeyAlias").get()
+            keyPassword = providers.gradleProperty("offKeyPassword").get()
+        }
+    }
+    buildTypes {
+        // Una copia aparte para probar sin tocar la instalación real: ./gradlew assembleDebug -PidSuffix=.prueba
+        getByName("debug") { applicationIdSuffix = providers.gradleProperty("idSuffix").orNull }
+        getByName("release") { signingConfig = signingConfigs.findByName("release") }
+    }
 }
 
 dependencies {

@@ -15,8 +15,10 @@ import java.time.ZoneId
 
 // Tarjetas para compartir en historias (9:16): un pozo saldado y el año. La semana tiene sus propias, en WeekCards.kt.
 
-// TODO: el dominio todavía no está comprado; cambiarlo cuando exista la landing pública.
-const val LANDING = "getoff.app"
+/** La landing (GitHub Pages): lo que se ve en las tarjetas. Sin Play Store, de ahí se baja el APK. */
+const val LANDING = "martin-izq.github.io/off-app"
+/** El link que se comparte: abre la landing en el botón de descarga. */
+const val DOWNLOAD_URL = "https://$LANDING/#download"
 
 /** Lo que dice una tarjeta: de qué es, el número grande con su unidad y hasta cinco filas. */
 data class ShareCard(val eyebrow: String, val big: String, val unit: String, val rows: List<Pair<String, String>>)
@@ -133,7 +135,7 @@ fun shareBitmap(ctx: Context, bmp: Bitmap) {
     val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.share", file)
     val send = Intent(Intent.ACTION_SEND).setType("image/png")
         .putExtra(Intent.EXTRA_STREAM, uri)
-        .putExtra(Intent.EXTRA_TEXT, t("Lo que pasa off, cuenta. ", "What happens off, counts. ") + LANDING)
+        .putExtra(Intent.EXTRA_TEXT, t("Lo que pasa off, cuenta. ", "What happens off, counts. ") + DOWNLOAD_URL)
         .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     send.clipData = ClipData.newRawUri(null, uri) // la vista previa del menú de compartir
     ctx.startActivity(Intent.createChooser(send, null))

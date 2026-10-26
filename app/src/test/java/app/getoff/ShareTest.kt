@@ -3,16 +3,14 @@ package app.getoff
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
-import java.net.URLDecoder
 import java.time.LocalDate
 
 class ShareTest {
     @Test
     fun inviteRoundTrip() {
         val i = Invite(Group("a1b2c3d4", "Los del & asado = 1"), "Juli")
-        // Play le pasa a la app el referrer ya decodificado una vez.
-        val referrer = URLDecoder.decode(inviteLink("app.getoff", i).substringAfter("referrer="), "UTF-8")
-        assertEquals(i, parseInvite(referrer))
+        // Play le pasa a la app el referrer ya decodificado una vez: los valores siguen codificados.
+        assertEquals(i, parseInvite("g=a1b2c3d4&n=Los+del+%26+asado+%3D+1&h=Juli"))
     }
 
     @Test
