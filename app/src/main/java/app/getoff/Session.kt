@@ -9,6 +9,7 @@ import androidx.work.WorkerParameters
 import java.time.Instant
 import java.time.ZoneId
 import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.sync.withLock
 
 /** Empieza una sesión ahora. Un worker la cierra un minuto después del final. */
 fun startSession(ctx: Context, minutes: Int) {
@@ -34,24 +35,28 @@ suspend fun finishSession(ctx: Context, now: Long = System.currentTimeMillis()) 
     val (start, minutes) = store.session ?: return
     val end = start + minutes * 60_000L
     if (now < end) return
-    store.session = null
-    val locked = lockedIntervals(readEvents(ctx, start - 12 * 3_600_000L, end), start, end)
-    val bonus = sessionPoints(locked, start, minutes)
-    if (bonus == 0) return
+    val bonus = sessionPoints(lockedBetween(ctx, start, end), start, minutes)
     // ponytail: una sesión que cruza la medianoche suma todo al día en que empezó.
     val date = Instant.ofEpochMilli(start).atZone(ZoneId.systemDefault()).toLocalDate()
-    val day = store.load(date) ?: sync(ctx).takeIf { it.date == date } ?: return
-    store.save(day.copy(sessionBonus = day.sessionBonus + bonus))
+    if (bonus > 0 && store.load(date) == null) sync(ctx) // el día de la sesión todavía no se guardó
+    dayLock.withLock {
+        // Otro (worker o app) ya la cerró mientras tanto.
+        if (store.session?.first != start) return
+        store.session = null
+        if (bonus == 0) return
+        // Con eventos para dar bonus, sync siempre guarda el día: esto no debería pasar.
+        val day = store.load(date) ?: return
+        store.save(day.copy(sessionBonus = day.sessionBonus + bonus))
+    }
     sync(ctx) // por si el bonus completa la meta
-    notify(ctx, 2, t("Sesión cumplida: +${bonus * 2} puntos", "Session done: +${bonus * 2} points"), t("${duration(minutes)} sin desbloquear. Los bloques valieron doble.", "${duration(minutes)} without unlocking. The blocks counted double."))
+    notify(ctx, 2, t("Sesión cumplida: +$bonus puntos", "Session done: +$bonus points"), t("${duration(minutes)} sin desbloquear. Los bloques valieron doble.", "${duration(minutes)} without unlocking. The blocks counted double."))
 }
 
 /** Desbloquear pasada la gracia termina la sesión, sin castigo. */
 fun dropBrokenSession(ctx: Context, store: Store, now: Long = System.currentTimeMillis()) {
     val (start, _) = store.session ?: return
     if (now < start + SESSION_GRACE_MS) return
-    val locked = lockedIntervals(readEvents(ctx, start - 12 * 3_600_000L, now), start, now)
-    if (locked.none { it.first <= start + SESSION_GRACE_MS && it.last >= now }) cancelSession(ctx)
+    if (!sessionKept(lockedBetween(ctx, start, now), start, now)) cancelSession(ctx)
 }
 
 class SessionWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx, params) {

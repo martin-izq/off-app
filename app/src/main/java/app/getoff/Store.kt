@@ -205,6 +205,9 @@ class Store(ctx: Context) {
 
     fun load(date: LocalDate): Day? = p.getString("d:$date", null)?.let { parse(date, it) }
 
+    /** Días desde la instalación, los que suman puntos. Del más viejo al más nuevo. */
+    fun scoredDays(): List<Day> = installDate.let { from -> days().filter { !it.date.isBefore(from) } }
+
     /** Todos los días guardados, del más viejo al más nuevo. */
     fun days(): List<Day> = p.all.keys.filter { it.startsWith("d:") }
         .map { LocalDate.parse(it.removePrefix("d:")) }

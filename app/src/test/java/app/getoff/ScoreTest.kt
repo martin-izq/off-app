@@ -87,6 +87,17 @@ class ScoreTest {
         assertEquals(0, streak(listOf(false, false, true)))
     }
 
+    @Test fun keptByDateBreaksOnMissingDays() {
+        val d0 = java.time.LocalDate.of(2026, 10, 1)
+        fun met(i: Long) = Day(d0.plusDays(i), 0, 0, 0, 10, 2, 0, true)
+        // Días 0, 1 y 3 cumplidos; el 2 no se guardó, el 4 es hoy sin cumplir.
+        val kept = keptByDate(listOf(met(0), met(1), met(3)), emptySet(), d0.plusDays(4))
+        assertEquals(listOf(true, true, false, true, false), kept)
+        assertEquals(1, streak(kept.reversed()))
+        // Un comodín en el día faltante lo salva.
+        assertEquals(4, streak(keptByDate(listOf(met(0), met(1), met(3)), setOf(d0.plusDays(2)), d0.plusDays(4)).reversed()))
+    }
+
     @Test fun bestStreakIsLongestRun() {
         assertEquals(3, bestStreak(listOf(true, true, false, true, true, true, false)))
         assertEquals(0, bestStreak(listOf(false, false)))

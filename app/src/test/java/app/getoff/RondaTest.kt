@@ -72,6 +72,14 @@ class RondaTest {
         assertEquals("", (decode("D1|S|S|n1|g1|0|60000|Ana") as Sala).group)
     }
 
+    @Test fun hostMemberMatchesFinalAfterNormalizing() {
+        // Bloqueos con segundos, como salen de myMember: el código final los trunca al minuto.
+        val raw = Member("a", "Ana", 3, 1, listOf(1_000_027_000L..1_000_500_500L))
+        val me = normalized("n1", raw)
+        val final = decode(encode(Final("n1", "g", 960_000_000L, 1_200_000_000L, listOf(me)))) as Final
+        assertEquals(me, final.members.single())
+    }
+
     @Test fun pendingRoundTrip() {
         val p = Pending(Mine("n1", Member("a", "Ana", 12, 3)), "Sofi", 1_700_000_000_000L)
         assertEquals(p, decodePending(encodePending(p)))

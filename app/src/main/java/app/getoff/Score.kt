@@ -154,6 +154,21 @@ fun levelStart(n: Int): Int = LEVEL_STARTS[(n - 1).coerceIn(0, LEVEL_MAX - 1)]
 /** Con puntos negativos (IRL) se queda en el 1. */
 fun level(points: Int): Int = LEVEL_STARTS.count { it <= points }.coerceAtLeast(1)
 
+fun levelProgress(points: Int): Float = level(points).let { n ->
+    if (n == LEVEL_MAX) 1f else ((points - levelStart(n)).toFloat() / (levelStart(n + 1) - levelStart(n))).coerceIn(0f, 1f)
+}
+
+/**
+ * Cumplido o salvado con comodín, un valor por fecha desde el primer día hasta `until`, del más viejo al
+ * más nuevo. Un día sin datos cuenta como no cumplido (salvo comodín). `days`: del más viejo al más nuevo.
+ */
+fun keptByDate(days: List<Day>, frozen: Set<LocalDate>, until: LocalDate): List<Boolean> {
+    val first = days.firstOrNull()?.date ?: return emptyList()
+    val met = days.filter { it.met }.map { it.date }.toSet()
+    return generateSequence(first) { it.plusDays(1) }.takeWhile { !it.isAfter(until) }
+        .map { it in met || it in frozen }.toList()
+}
+
 /** Días seguidos con meta cumplida, del más nuevo al más viejo. Hoy sin cumplir no corta la racha. */
 fun streak(metNewestFirst: List<Boolean>): Int {
     val days = if (metNewestFirst.firstOrNull() == false) metNewestFirst.drop(1) else metNewestFirst
@@ -256,9 +271,12 @@ const val SESSION_GRACE_MS = 2 * 60_000L // para bloquear después de tocar «Em
  */
 fun sessionPoints(locked: List<LongRange>, start: Long, minutes: Int): Int {
     val end = start + minutes * 60_000L
-    val kept = locked.any { it.first <= start + SESSION_GRACE_MS && it.last >= end }
-    return if (kept) (minutes * 60_000L / BLOCK_MS).toInt() else 0
+    return if (sessionKept(locked, start, end)) (minutes * 60_000L / BLOCK_MS).toInt() else 0
 }
+
+/** Un solo bloqueo que empezó dentro de la gracia y sigue hasta `until`. */
+fun sessionKept(locked: List<LongRange>, start: Long, until: Long) =
+    locked.any { it.first <= start + SESSION_GRACE_MS && it.last >= until }
 
 /**
  * Tiempo recuperado de la semana: por cada día, los minutos de redes por debajo del promedio de los 7 días

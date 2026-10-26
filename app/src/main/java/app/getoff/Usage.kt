@@ -8,6 +8,8 @@ import android.os.Build
 import android.os.Process
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 fun hasUsageAccess(ctx: Context): Boolean {
     val ops = ctx.getSystemService(AppOpsManager::class.java)
@@ -31,26 +33,40 @@ internal fun readEvents(ctx: Context, from: Long, to: Long): List<Ev> {
     return out
 }
 
+/** Cuánto se lee antes de un rango para saber si arrancó con el celu bloqueado. */
+private const val LOOKBACK_MS = 12 * 3_600_000L
+
+/** Bloqueos dentro de [from, to). */
+fun lockedBetween(ctx: Context, from: Long, to: Long) = lockedIntervals(readEvents(ctx, from - LOOKBACK_MS, to), from, to)
+
+/**
+ * Serializa las escrituras de días: sync (worker y UI) y el bonus de sesión leen un Day, esperan a
+ * Health Connect y lo guardan entero; sin esto uno pisa al otro.
+ */
+internal val dayLock = Mutex()
+
 private fun LocalDate.millis(hour: Int = 0) =
     atTime(hour, 0).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
 
 /** Bloqueos de `date` dentro del horario despierto, hasta `now`. */
 fun lockedOn(ctx: Context, date: LocalDate, now: Long = System.currentTimeMillis()): List<LongRange> {
     val to = minOf(date.plusDays(1).millis(), now)
-    return lockedIntervals(readEvents(ctx, date.millis() - 12 * 3_600_000L, to), date.millis(WAKE_HOUR), to)
+    return lockedIntervals(readEvents(ctx, date.millis() - LOOKBACK_MS, to), date.millis(WAKE_HOUR), to)
 }
 
 /**
- * Calcula un día desde los eventos del sistema y Health Connect. Null si Android ya no tiene eventos de ese día.
+ * Calcula un día desde los eventos del sistema y Health Connect. Null si Android ya no tiene eventos de ese día
+ * (ni de las 12 h previas: un día entero bloqueado se calcula con el bloqueo de la noche anterior).
  */
 private suspend fun computeDay(ctx: Context, store: Store, date: LocalDate, now: Long): Day? {
     val start = date.millis()
     val end = date.plusDays(1).millis()
     val wake = date.millis(WAKE_HOUR)
     val to = minOf(end, now)
-    // 12 h hacia atrás para saber si el día arrancó con el celu bloqueado.
-    val evs = readEvents(ctx, start - 12 * 3_600_000L, to)
-    if (evs.none { it.t >= start }) return null
+    // ponytail: un bloqueo de más de 12 h antes de la medianoche no se ve y ese día queda sin calcular;
+    // buscar el último evento del keyguard más atrás si aparecen días así.
+    val evs = readEvents(ctx, start - LOOKBACK_MS, to)
+    if (evs.isEmpty()) return null
 
     val locked = lockedIntervals(evs, wake, to)
     val blocks = blockPoints(locked)
@@ -91,7 +107,7 @@ fun streakBefore(store: Store, date: LocalDate): Int =
  * Ayer se recalcula siempre: el reloj puede sincronizar pasos y ejercicio a la mañana siguiente.
  * Lo usan el worker y la UI.
  */
-suspend fun sync(ctx: Context, now: Long = System.currentTimeMillis()): Day {
+suspend fun sync(ctx: Context, now: Long = System.currentTimeMillis()): Day = dayLock.withLock {
     val store = Store(ctx)
     store.installDate // fija la fecha de instalación en la primera corrida
     val today = LocalDate.now()
@@ -100,7 +116,7 @@ suspend fun sync(ctx: Context, now: Long = System.currentTimeMillis()): Day {
         if (i == 1 || store.load(d)?.closed != true) computeDay(ctx, store, d, now)?.let(store::save)
     }
     // Comodín semanal: antes de calcular hoy, que hereda la racha.
-    store.frozen = autoFreeze(store.days().filter { !it.date.isBefore(store.installDate) }, store.frozen, today.minusDays(HISTORY_DAYS.toLong()))
+    store.frozen = autoFreeze(store.scoredDays(), store.frozen, today.minusDays(HISTORY_DAYS.toLong()))
     val day = computeDay(ctx, store, today, now)
         ?: Day(today, 0, 0, 0, store.goalFor(today), 0, 0, false)
     store.save(day)
@@ -114,7 +130,7 @@ suspend fun sync(ctx: Context, now: Long = System.currentTimeMillis()): Day {
         store.bet = null
     }
     Widget.update(ctx)
-    return day
+    day
 }
 
 /** Todo lo que muestra la UI. */
@@ -142,10 +158,11 @@ data class Snapshot(
     val totalPoints get() = days.sumOf { it.total } + rondaLedger.sumOf { it.amount }
     val level get() = level(totalPoints)
     val toNextLevel get() = if (level == LEVEL_MAX) 0 else levelStart(level + 1) - totalPoints
-    val levelProgress get() = if (level == LEVEL_MAX) 1f
-        else (totalPoints - levelStart(level)).toFloat() / (levelStart(level + 1) - levelStart(level))
-    val streak get() = streak(days.reversed().map(::kept))
-    val bestStreak get() = bestStreak(days.map(::kept))
+    val levelProgress get() = levelProgress(totalPoints)
+    // Un día sin datos corta la racha, igual que en streakBefore (meta y widget).
+    private val keptByDate get() = keptByDate(days, frozen, today.date)
+    val streak get() = streak(keptByDate.reversed())
+    val bestStreak get() = bestStreak(keptByDate)
 }
 
 suspend fun snapshot(ctx: Context): Snapshot {
@@ -156,9 +173,11 @@ suspend fun snapshot(ctx: Context): Snapshot {
     // Con la app abierta, la meta cumplida ya se ve en pantalla: no hace falta notificar.
     if (today.met) store.notifiedOn = today.date
     val history = (1..HISTORY_DAYS).mapNotNull { store.load(today.date.minusDays(it.toLong()))?.socialMin }
+    val days = store.scoredDays()
+    val cumulative = days.sumOf { it.earned } to days.sumOf { it.socialPenalty }
     return Snapshot(
         today = today,
-        days = store.days().filter { !it.date.isBefore(store.installDate) },
+        days = days,
         lastRestMin = lockedOn(ctx, today.date).lastOrNull()?.let { ((it.last - it.first) / 60_000).toInt() },
         socialAvg = if (history.size >= HISTORY_DAYS) history.average().toInt() else null,
         unlockHistory = (1..HISTORY_DAYS).mapNotNull { store.load(today.date.minusDays(it.toLong()))?.unlocks },
@@ -168,7 +187,7 @@ suspend fun snapshot(ctx: Context): Snapshot {
         myId = store.myId,
         groups = store.groups.map { g ->
             val gs = store.group(g.id)
-            GroupView(g.id, g.name, sinceSettle(store, g.id), gs.juntada?.first, gs.meetings().mapNotNull { decode(it) as? Final }.reversed(), gs.pending)
+            GroupView(g.id, g.name, sinceSettle(store, g.id, cumulative), gs.juntada?.first, gs.meetings().mapNotNull { decode(it) as? Final }.reversed(), gs.pending)
         },
         historyCount = history.size,
         nextGoal = store.nextGoal(today.date),
@@ -193,12 +212,12 @@ data class GroupView(
 
 /** Ganado y debido (redes de más) acumulados desde la instalación. */
 private fun cumulative(store: Store): Pair<Int, Int> {
-    val days = store.days().filter { !it.date.isBefore(store.installDate) }
+    val days = store.scoredDays()
     return days.sumOf { it.earned } to days.sumOf { it.socialPenalty }
 }
 
-fun sinceSettle(store: Store, group: String): Pair<Int, Int> {
-    val (e, d) = cumulative(store)
+fun sinceSettle(store: Store, group: String, cumulative: Pair<Int, Int> = cumulative(store)): Pair<Int, Int> {
+    val (e, d) = cumulative
     val g = store.group(group)
     return e - g.settledEarned to d - g.settledDebt
 }
@@ -214,12 +233,9 @@ fun joinGroup(store: Store, g: Group) {
 /** Lo que llevo a un encuentro del grupo. Con juntada, también mis bloqueos de [from, to). */
 fun myMember(ctx: Context, store: Store, group: String, from: Long, to: Long): Member {
     val (e, d) = sinceSettle(store, group)
-    val locked = if (from > 0) myLocks(ctx, from, to) else emptyList()
+    val locked = if (from > 0) lockedBetween(ctx, from, to) else emptyList()
     return Member(store.myId, store.nickname ?: "?", e, d, locked)
 }
-
-/** Mis bloqueos dentro de [from, to). */
-fun myLocks(ctx: Context, from: Long, to: Long) = lockedIntervals(readEvents(ctx, from - 12 * 3_600_000L, to), from, to)
 
 /** Como viaja por QR: así se compara con lo que vuelve en el código final. */
 fun normalized(nonce: String, m: Member) = (decode(encode(Mine(nonce, m))) as Mine).member

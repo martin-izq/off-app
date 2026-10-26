@@ -36,8 +36,13 @@ private fun client(ctx: Context): HealthConnectClient? =
     if (HealthConnectClient.getSdkStatus(ctx) == HealthConnectClient.SDK_AVAILABLE) HealthConnectClient.getOrCreate(ctx) else null
 
 suspend fun healthState(ctx: Context): Health = when (HealthConnectClient.getSdkStatus(ctx)) {
-    HealthConnectClient.SDK_AVAILABLE ->
+    HealthConnectClient.SDK_AVAILABLE -> try {
         if (client(ctx)!!.permissionController.getGrantedPermissions().containsAll(HEALTH_PERMISSIONS)) Health.ON else Health.ASK
+    } catch (e: RemoteException) {
+        Health.NONE // Health Connect actualizándose o caído: se vuelve a mirar en el próximo refresco
+    } catch (e: IllegalStateException) {
+        Health.NONE
+    }
     HealthConnectClient.SDK_UNAVAILABLE_PROVIDER_UPDATE_REQUIRED -> Health.INSTALL
     else -> Health.NONE
 }

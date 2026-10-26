@@ -160,11 +160,8 @@ private class WidgetState(
             val today = LocalDate.now()
             val d = store.load(today)
             val goal = d?.goal ?: store.goalFor(today)
-            val days = store.days().filter { !it.date.isBefore(store.installDate) }
-            val total = days.sumOf { it.total } + store.rondaLedger().sumOf { it.amount }
-            val level = level(total)
-            val progress = if (level >= LEVEL_MAX) 1f
-            else (total - levelStart(level)).toFloat() / (levelStart(level + 1) - levelStart(level))
+            // Mismo total que Snapshot.totalPoints: días más IRL.
+            val total = store.scoredDays().sumOf { it.total } + store.rondaLedger().sumOf { it.amount }
             val frozen = store.frozen
             val monday = today.with(DayOfWeek.MONDAY)
             val week = (0..6).map { monday.plusDays(it.toLong()) }.map { date ->
@@ -180,7 +177,7 @@ private class WidgetState(
             val night = (ctx.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
             return WidgetState(
                 dark = store.darkMode ?: night,
-                total = total, level = level, levelProgress = progress.coerceIn(0f, 1f),
+                total = total, level = level(total), levelProgress = levelProgress(total),
                 today = d?.toGoal ?: 0, goal = goal, met = d?.met == true,
                 streak = streakBefore(store, today) + if (d?.met == true) 1 else 0,
                 week = week,

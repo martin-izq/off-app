@@ -19,6 +19,7 @@ import androidx.work.WorkerParameters
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.temporal.TemporalAdjusters
 import java.util.concurrent.TimeUnit
 
 /** Cada 15 min (mínimo de WorkManager): guarda puntajes y avisa una vez por día al cumplir la meta. */
@@ -33,10 +34,12 @@ class ScoreWorker(ctx: Context, params: WorkerParameters) : CoroutineWorker(ctx,
             notify(ctx, 1, t("Meta cumplida: +${today.goalBonus} puntos", "Goal met: +${today.goalBonus} points"), t("Llegaste a ${today.goal}. Tiempo bien ganado.", "You reached ${today.goal}. Time well spent."))
             store.notifiedOn = today.date
         }
-        // Resumen semanal: uno solo, el domingo después de las 20 h.
-        if (today.date.dayOfWeek == DayOfWeek.SUNDAY && LocalTime.now().hour >= 20 && store.weeklyOn != today.date) {
-            weeklySummary(store, today.date)?.let { (title, text) -> notify(ctx, 3, title, text, tab = 2) }
-            store.weeklyOn = today.date
+        // Resumen semanal: uno solo, el domingo después de las 20 h. Si el worker no corrió (Doze), sale el lunes.
+        val sunday = today.date.with(TemporalAdjusters.previousOrSame(DayOfWeek.SUNDAY))
+        val due = if (today.date == sunday) LocalTime.now().hour >= 20 else today.date == sunday.plusDays(1)
+        if (due && store.weeklyOn != sunday) {
+            weeklySummary(store, sunday)?.let { (title, text) -> notify(ctx, 3, title, text, tab = 2) }
+            store.weeklyOn = sunday
         }
         // «Tu año off»: un aviso el 28 de diciembre (o después, si ese día no corrió) para compartir el año.
         if (today.date.monthValue == 12 && today.date.dayOfMonth >= 28 && store.wrappedYear != today.date.year) {

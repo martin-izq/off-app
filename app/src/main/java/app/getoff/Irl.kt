@@ -204,7 +204,11 @@ internal fun Ronda(s: Snapshot, open: (Sheet) -> Unit, onChanged: () -> Unit) {
                     store.group(g.id).pending = null
                     val from = g.juntadaFrom ?: 0L
                     val now = minuteNow()
-                    member(g.id, from, now) { go(Step.Host(Sala(false, newCode(), g.id, from, now, me, g.name), it)) }
+                    member(g.id, from, now) {
+                        val sala = Sala(false, newCode(), g.id, from, now, me, g.name)
+                        // Como lo ven los demás al leer el código final: si no, applyFinal no reconoce mis datos.
+                        go(Step.Host(sala, normalized(sala.nonce, it)))
+                    }
                     onChanged()
                 }
             }
@@ -485,7 +489,7 @@ private fun Juntada(g: GroupView, from: Long, onBack: () -> Unit, onCancel: () -
     LaunchedEffect(from) {
         while (true) {
             now = System.currentTimeMillis()
-            locks = withContext(Dispatchers.Default) { myLocks(ctx, from, now) }
+            locks = withContext(Dispatchers.Default) { lockedBetween(ctx, from, now) }
             delay(30_000)
         }
     }
