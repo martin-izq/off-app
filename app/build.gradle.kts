@@ -12,8 +12,8 @@ android {
         applicationId = "app.getoff"
         minSdk = 28
         targetSdk = 36
-        versionCode = 2
-        versionName = "0.2"
+        versionCode = 3
+        versionName = "0.3"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -45,7 +45,8 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.9.2")
     implementation("androidx.work:work-runtime-ktx:2.9.1")
     implementation("androidx.health.connect:connect-client:1.1.0")
-    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation("com.google.android.gms:play-services-code-scanner:16.1.0") // lector de QR de Google
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0") // respaldo sin Play Services; también dibuja el QR
     implementation("com.android.installreferrer:installreferrer:2.2") // invitaciones: el grupo viaja en el link de Play
     testImplementation("junit:junit:4.13.2")
 }

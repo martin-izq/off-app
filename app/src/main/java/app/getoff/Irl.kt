@@ -55,6 +55,9 @@ import com.google.zxing.BarcodeFormat
 import com.google.zxing.EncodeHintType
 import com.google.zxing.qrcode.QRCodeWriter
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.codescanner.GmsBarcodeScannerOptions
+import com.google.mlkit.vision.codescanner.GmsBarcodeScanning
 import com.journeyapps.barcodescanner.ScanContract
 import com.journeyapps.barcodescanner.ScanOptions
 import kotlinx.coroutines.Dispatchers
@@ -120,12 +123,11 @@ internal fun Ronda(s: Snapshot, open: (Sheet) -> Unit, onChanged: () -> Unit) {
         joinGroup(store, Group(sala.ronda, sala.group.ifEmpty { t("Grupo de ${sala.host.ifEmpty { "amigos" }}", "${sala.host.ifEmpty { "Friends" }}'s group") }))
         selected = sala.ronda
     }
-    val scan = rememberLauncherForActivityResult(ScanContract()) { r ->
-        val raw = r.contents ?: return@rememberLauncherForActivityResult
+    fun onScanned(raw: String) {
         val code = decode(raw)
         if (code == null && otherVersion(raw)) {
             notice = OLD_CODE
-            return@rememberLauncherForActivityResult
+            return
         }
         notice = when (val st = step) {
             is Step.Host -> when {
@@ -166,9 +168,16 @@ internal fun Ronda(s: Snapshot, open: (Sheet) -> Unit, onChanged: () -> Unit) {
             }
         }
     }
-    fun launchScan() = scan.launch(
-        ScanOptions().setDesiredBarcodeFormats(ScanOptions.QR_CODE).setPrompt("").setBeepEnabled(false).setOrientationLocked(false),
-    )
+    val zxing = rememberLauncherForActivityResult(ScanContract()) { r -> r.contents?.let(::onScanned) }
+    // El lector de Google (sin permiso de cámara). Sin Play Services o sin el módulo descargado falla y se usa zxing.
+    fun launchScan() {
+        val options = GmsBarcodeScannerOptions.Builder().setBarcodeFormats(Barcode.FORMAT_QR_CODE).enableAutoZoom().build()
+        GmsBarcodeScanning.getClient(ctx, options).startScan()
+            .addOnSuccessListener { b -> b.rawValue?.let(::onScanned) }
+            .addOnFailureListener {
+                zxing.launch(ScanOptions().setDesiredBarcodeFormats(ScanOptions.QR_CODE).setPrompt("").setBeepEnabled(false).setOrientationLocked(false))
+            }
+    }
     var cancelJuntada by remember { mutableStateOf(false) }
     var leave by remember { mutableStateOf(false) }
     val me = s.nickname.orEmpty()
@@ -660,10 +669,13 @@ private fun OffQr(text: String) {
             val n = m.size
             val cell = size.minDimension / n
             val gap = cell * 0.1f
-            for (r in 0 until n) for (c in 0 until n) if (m[r][c]) drawRoundRect(
-                if (r >= n - 7 && c >= n - 7) Accent else QrInk,
-                Offset(c * cell + gap / 2, r * cell + gap / 2), Size(cell - gap, cell - gap), CornerRadius(cell * 0.3f),
-            )
+            for (r in 0 until n) for (c in 0 until n) if (m[r][c]) {
+                val color = if (r >= n - 7 && c >= n - 7) Accent else QrInk
+                // Los tres cuadrados van macizos: con huecos entre módulos el lector no los encuentra y no escanea nada.
+                val finder = (r < 7 || r >= n - 7) && (c < 7 || c >= n - 7) && !(r >= n - 7 && c < 7)
+                if (finder) drawRect(color, Offset(c * cell, r * cell), Size(cell + 0.5f, cell + 0.5f))
+                else drawRoundRect(color, Offset(c * cell + gap / 2, r * cell + gap / 2), Size(cell - gap, cell - gap), CornerRadius(cell * 0.3f))
+            }
         }
         Row(Modifier.clip(RoundedCornerShape(10.dp)).background(Color.White).padding(horizontal = 9.dp, vertical = 4.dp)) {
             Text("off", color = QrInk, fontSize = 17.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp)
