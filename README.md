@@ -18,7 +18,7 @@ Off is not on Google Play. Download `off.apk` from the [latest release](https://
 - **Sessions** of 30 min, 1 h or 2 h double their blocks if you never unlock.
 - **Social media** over your weekly average costs 1 point every 5 minutes.
 - **Goal and streak:** hitting the daily goal pays a bonus that the streak multiplies, with one free pass a week.
-- **IRL groups:** debt from social media goes into each group's pot. At a meetup, phones exchange QR codes and every phone computes the same split. During a hangout, blocks with every phone locked count double and the first to unlock pays 5 points.
+- **IRL groups:** debt from social media goes into each group's pot. At a meetup, phones exchange QR codes and every phone computes the same split. During a hangout, blocks with every phone locked count double and every unlock pays 5 points into the pot. The pot is split among everyone present, in proportion to the points each one earned since the last settlement.
 - **Sharing:** weekly cards in four designs, a card for each settled pot and a year in review in December.
 
 The scoring rules are fixed constants in `Score.kt` and `Ronda.kt`.
@@ -44,7 +44,7 @@ Everything lives in one package, `app.getoff`, under `app/src/main/java/app/geto
 | File | What it holds |
 | --- | --- |
 | `Score.kt` | Pure scoring rules: blocks, rests, unlocks, steps, exercise, social media, goal, streak, levels |
-| `Ronda.kt` | Pure IRL logic: pot split, hangout bonus, first to unlock, the QR code format |
+| `Ronda.kt` | Pure IRL logic: pot split, hangout bonus, unlock fines, the QR code format |
 | `Usage.kt` | Reads Android usage events, builds each day and the `Snapshot` the UI shows |
 | `Health.kt` | Health Connect: steps and workouts |
 | `Store.kt` | SharedPreferences storage |

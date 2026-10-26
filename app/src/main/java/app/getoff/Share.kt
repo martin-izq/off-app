@@ -36,8 +36,8 @@ fun potCard(f: Final, group: String, me: String): ShareCard {
     val together = f.from > 0
     val pot = f.members.sumOf { it.debt } + all.sumOf { it.fine }
     val rows = all.take(4).map { (if (it.id == me) t("Vos", "You") else it.name) to signed(it.delta) } +
-        listOfNotNull(all.firstOrNull { it.fine > 0 }?.let {
-            t("Desbloqueó primero", "First to unlock") to (if (it.id == me) t("vos", "you") else it.name)
+        listOfNotNull(all.filter { it.fine > 0 }.maxByOrNull { it.fine }?.let {
+            t("Más desbloqueos", "Most unlocks") to (if (it.id == me) t("vos", "you") else it.name)
         })
     return ShareCard(
         t("$group · cuenta saldada", "$group · settled up"),

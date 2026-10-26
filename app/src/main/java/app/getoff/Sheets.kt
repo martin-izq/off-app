@@ -590,7 +590,7 @@ private fun RondaRulesSheet() {
     listOf(
         t("Si alguien se pasa de redes, esos puntos van al pozo de cada uno de sus grupos.", "Go over on social media and those points go into the pot of each of your groups."),
         t("El pozo se reparte solo en persona, entre los presentes, según lo que ganó cada uno.", "The pot is only split in person, among those present, by what each one earned."),
-        t("En una juntada, cada 30 min con todos los celus bloqueados vale doble. El primero que desbloquea pone $UNLOCK_FINE.", "At a hangout, every 30 min with every phone locked counts double. First to unlock puts in $UNLOCK_FINE."),
+        t("En una juntada, cada 30 min con todos los celus bloqueados vale doble. Cada desbloqueo pone $UNLOCK_FINE en el pozo.", "At a hangout, every 30 min with every phone locked counts double. Every unlock puts $UNLOCK_FINE into the pot."),
         t("Sin servidor: todo viaja por QR, de celu a celu.", "No server: everything travels by QR, phone to phone."),
     ).forEachIndexed { i, t ->
         Hairline()

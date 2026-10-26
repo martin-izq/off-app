@@ -253,7 +253,7 @@ fun applyFinal(store: Store, f: Final, mine: Member): String? {
     val o = outcome(f).first { it.id == store.myId }
     val today = LocalDate.now()
     if (o.bonus > 0) store.addRondaEntry(Entry(today, o.bonus, t("Juntada · ${group.name}", "Hangout · ${group.name}")))
-    if (o.fine > 0) store.addRondaEntry(Entry(today, -o.fine, t("Desbloqueaste primero · ${group.name}", "You unlocked first · ${group.name}")))
+    if (o.fine > 0) store.addRondaEntry(Entry(today, -o.fine, t("Desbloqueos en la juntada · ${group.name}", "Unlocks at the hangout · ${group.name}")))
     if (o.share > 0) store.addRondaEntry(Entry(today, o.share, t("Pozo · ${group.name}", "Pot · ${group.name}")))
     g.settledEarned += me.earned
     g.settledDebt += me.debt

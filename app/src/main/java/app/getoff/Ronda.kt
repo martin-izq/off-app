@@ -5,7 +5,7 @@ import kotlin.math.min
 
 // IRL: el pozo de cada grupo se salda en persona. Todo es determinista: cada celu calcula lo mismo con los mismos datos.
 
-const val UNLOCK_FINE = 5 // el primero que desbloquea en una juntada paga esto al pozo
+const val UNLOCK_FINE = 5 // cada desbloqueo en una juntada pone esto en el pozo
 
 /** Lo que cada uno lleva a un encuentro: lo ganado y lo que debe al pozo desde que saldó por última vez. */
 data class Summary(val id: String, val earned: Int, val debt: Int)
@@ -44,16 +44,12 @@ fun togetherBonus(lockedByMember: List<List<LongRange>>, from: Long, to: Long): 
     blockPoints(allLocked(lockedByMember, from, to))
 
 /**
- * Quién desbloqueó primero. La juntada arranca cuando el último bloquea (al arrancar todos tienen el celu
- * en la mano). Null si nunca estuvieron todos bloqueados o nadie desbloqueó antes de `to`.
+ * Cuántas veces desbloqueó cada uno en la juntada. Cuenta desde que el último bloquea (al arrancar todos
+ * tienen el celu en la mano) hasta `to`. Si nunca estuvieron todos bloqueados, nadie paga.
  */
-fun firstToUnlock(lockedByMember: Map<String, List<LongRange>>, from: Long, to: Long): String? {
-    val start = allLocked(lockedByMember.toSortedMap().values.toList(), from, to).firstOrNull()?.first ?: return null
-    return lockedByMember.toSortedMap().entries
-        .mapNotNull { (id, locked) -> locked.firstOrNull { start in it }?.let { id to it.last } }
-        .filter { it.second < to }
-        .minByOrNull { it.second }
-        ?.first
+fun unlockCounts(lockedByMember: Map<String, List<LongRange>>, from: Long, to: Long): Map<String, Int> {
+    val start = allLocked(lockedByMember.toSortedMap().values.toList(), from, to).firstOrNull()?.first ?: return emptyMap()
+    return lockedByMember.mapValues { (_, locked) -> locked.count { it.last in start until to } }
 }
 
 // ---------- Códigos QR ----------
@@ -72,7 +68,10 @@ data class Sala(val start: Boolean, val nonce: String, val ronda: String, val fr
 data class Mine(val nonce: String, val member: Member) : Code
 data class Final(val nonce: String, val ronda: String, val from: Long, val to: Long, val members: List<Member>) : Code
 
-private const val V = "D1"
+private const val V = "D2" // D2: paga cada desbloqueo (D1: solo el primero)
+
+/** Un código de Off de otra versión: las reglas pueden ser otras, así que no se mezcla. */
+fun otherVersion(s: String) = s.substringBefore("|").let { it != V && it.matches(Regex("D\\d+")) }
 
 /** Lo que el apodo no puede tener para no romper el formato. */
 fun cleanName(s: String) = s.replace(Regex("[|~,;\\-\\n]"), " ").trim().take(20)
@@ -122,10 +121,10 @@ fun outcome(f: Final): List<Outcome> {
     val juntada = f.from > 0
     val locks = f.members.associate { it.id to it.locked }
     val bonus = if (juntada) togetherBonus(locks.toSortedMap().values.toList(), f.from, f.to) else 0
-    val payer = if (juntada) firstToUnlock(locks, f.from, f.to) else null
-    val shares = settle(f.members.map { Summary(it.id, it.earned, it.debt + if (it.id == payer) UNLOCK_FINE else 0) })
+    val fines = if (juntada) unlockCounts(locks, f.from, f.to).mapValues { it.value * UNLOCK_FINE } else emptyMap()
+    val shares = settle(f.members.map { Summary(it.id, it.earned, it.debt + (fines[it.id] ?: 0)) })
     return f.members.sortedBy { it.id }.map {
-        Outcome(it.id, it.name, bonus, if (it.id == payer) UNLOCK_FINE else 0, shares[it.id] ?: 0)
+        Outcome(it.id, it.name, bonus, fines[it.id] ?: 0, shares[it.id] ?: 0)
     }
 }
 

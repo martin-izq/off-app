@@ -195,8 +195,8 @@ internal fun Onboarding(access: Boolean, onDone: (tab: Int) -> Unit) {
                         Headline(if (inv.host.isEmpty()) t("Te invitaron a «$g».", "You're invited to “$g”.")
                             else t("${inv.host} te invitó a «$g».", "${inv.host} invited you to “$g”."))
                         Spacer(Modifier.height(16.dp))
-                        Para(t("Entrás al grupo y, cuando se junten, escaneás su código y arranca el juego.",
-                            "Join the group, and when you meet up, scan their code and the game starts."))
+                        Para(t("Entrás al grupo y, cuando se junten, escaneás su código y empiezan a sumar juntos.",
+                            "Join the group, and when you meet up, scan their code and start scoring together."))
                     } ?: run {
                         Headline(t("Armá tu grupo.", "Start your group."))
                         Spacer(Modifier.height(16.dp))

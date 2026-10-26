@@ -85,6 +85,8 @@ internal sealed interface Step {
 internal fun minuteNow() = System.currentTimeMillis() / 60_000 * 60_000
 internal fun newCode() = java.util.UUID.randomUUID().toString().take(8)
 
+private fun times(n: Int) = t(if (n == 1) "1 vez" else "$n veces", if (n == 1) "once" else "$n times")
+private val OLD_CODE get() = t("Ese código es de otra versión de Off. Actualicen la app y vuelvan a escanear.", "That code is from another version of Off. Update the app and scan again.")
 private val NOT_OFF get() = t("Ese código no es de off.", "That code isn't from off.")
 private val OTHER get() = t("Ese código es de otro encuentro.", "That code is from another meetup.")
 private val OWN get() = t("Ese es tu propio código.", "That's your own code.")
@@ -121,6 +123,10 @@ internal fun Ronda(s: Snapshot, open: (Sheet) -> Unit, onChanged: () -> Unit) {
     val scan = rememberLauncherForActivityResult(ScanContract()) { r ->
         val raw = r.contents ?: return@rememberLauncherForActivityResult
         val code = decode(raw)
+        if (code == null && otherVersion(raw)) {
+            notice = OLD_CODE
+            return@rememberLauncherForActivityResult
+        }
         notice = when (val st = step) {
             is Step.Host -> when {
                 code == null -> NOT_OFF
@@ -462,7 +468,7 @@ private fun RondaHome(
         g.meetings.take(5).forEach { f ->
             val mine = f.mine(s.myId)
             val detail = t("${f.members.size} personas", "${f.members.size} people") + when {
-                (mine?.fine ?: 0) > 0 -> t(" · desbloqueaste primero", " · you unlocked first")
+                (mine?.fine ?: 0) > 0 -> t(" · desbloqueaste ${times(mine!!.fine / UNLOCK_FINE)}", " · you unlocked ${times(mine!!.fine / UNLOCK_FINE)}")
                 f.from > 0 -> t(" · juntada de ${duration(((f.to - f.from) / 60_000).toInt())}", " · ${duration(((f.to - f.from) / 60_000).toInt())} hangout")
                 else -> ""
             }
@@ -518,9 +524,9 @@ private fun Juntada(g: GroupView, from: Long, onBack: () -> Unit, onCancel: () -
     val full = segs.count { it >= 1f }
     Text(t("$full ${if (full == 1) "completo" else "completos"} · si todos aguantaron, valen doble", "$full complete · if everyone held out, they count double"), color = Muted, fontSize = 13.sp,
         modifier = Modifier.padding(top = 2.dp))
-    // Si estoy mirando esto, desbloqueé: si antes había bloqueado durante la juntada, puede que haya sido el primero.
-    if (locks.isNotEmpty()) Notice(t("Abriste el celu. Si fuiste el primero en desbloquear, ponés $UNLOCK_FINE en el pozo. Se sabe al saldar.", "You opened your phone. If you were first to unlock, you put $UNLOCK_FINE into the pot. You'll know when you settle."))
-    InfoBox(t("Al repartir se cruzan los bloqueos de todos: ahí se ve si aguantaron y quién desbloqueó primero.", "When you settle, everyone's locked time is compared: that shows who held out and who unlocked first."))
+    // Si estoy mirando esto, desbloqueé: si antes había bloqueado durante la juntada, ese desbloqueo paga.
+    if (locks.isNotEmpty()) Notice(t("Abriste el celu: cada desbloqueo pone $UNLOCK_FINE en el pozo. Se cobra al saldar.", "You opened your phone: every unlock puts $UNLOCK_FINE into the pot. It's charged when you settle."))
+    InfoBox(t("Al repartir se cruzan los bloqueos de todos: ahí se ve si aguantaron y cuántas veces desbloqueó cada uno.", "When you settle, everyone's locked time is compared: that shows who held out and how many times each one unlocked."))
     Spacer(Modifier.height(32.dp))
     PrimaryButton(t("Terminar y repartir", "Finish and settle"), onClick = onFinish)
     Spacer(Modifier.height(12.dp))
@@ -592,7 +598,7 @@ private fun RondaDone(st: Step.Done, me: String, groupName: String, onOk: () -> 
         Box(Modifier.fillMaxWidth().height(1.dp).background(Line))
         if (mine.bonus > 0) Source(null, t("Juntada · ${mine.bonus} bloques dobles", "Hangout · ${mine.bonus} double blocks"), "", "+${mine.bonus}")
         Source(null, t("Tu parte del pozo", "Your share of the pot"), "", if (mine.share > 0) "+${mine.share}" else "0")
-        all.firstOrNull { it.fine > 0 }?.let { Source(null, t("Desbloqueó primero: ${if (it.id == me) "vos" else it.name}", "First to unlock: ${if (it.id == me) "you" else it.name}"), "", "−${it.fine}") }
+        all.filter { it.fine > 0 }.forEach { Source(null, t("Desbloqueos: ${if (it.id == me) "vos" else it.name} · ${times(it.fine / UNLOCK_FINE)}", "Unlocks: ${if (it.id == me) "you" else it.name} · ${times(it.fine / UNLOCK_FINE)}"), "", "−${it.fine}") }
     }
     Spacer(Modifier.height(40.dp))
     if (f == null) PrimaryButton(t("Volver a escanear", "Scan again"), onClick = onRetry) else {
@@ -606,7 +612,7 @@ private fun RondaDone(st: Step.Done, me: String, groupName: String, onOk: () -> 
 internal fun why(o: Outcome) = buildList {
     if (o.share > 0) add(t("pozo +${o.share}", "pot +${o.share}"))
     if (o.bonus > 0) add(t("juntada +${o.bonus}", "hangout +${o.bonus}"))
-    if (o.fine > 0) add(t("desbloqueó primero −${o.fine}", "unlocked first −${o.fine}"))
+    if (o.fine > 0) add(t("desbloqueos −${o.fine}", "unlocks −${o.fine}"))
 }.joinToString(" · ").ifEmpty { t("sin cambios", "no change") }
 
 /** Un paso del encuentro: en qué paso va, qué hacer, el QR y lo que se puede tocar. */

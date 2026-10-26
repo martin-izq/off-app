@@ -27,8 +27,8 @@ fun parseInvite(referrer: String): Invite? {
 /** Abre el menú de compartir (WhatsApp y los demás) con el link de invitación al grupo. */
 fun shareInvite(ctx: Context, i: Invite) {
     val text = t(
-        "Juguemos a Off en «${i.group.name}»: el que desbloquea primero, paga. Bajala y cuando nos juntemos escaneás mi código: ",
-        "Let's play Off in “${i.group.name}”: first to unlock pays. Get it, and when we meet you scan my code: ",
+        "Sumemos puntos con Off en «${i.group.name}»: el que desbloquea, paga. Bajala y cuando nos juntemos escaneás mi código: ",
+        "Let's score points with Off in “${i.group.name}”: whoever unlocks pays. Get it, and when we meet you scan my code: ",
     ) + DOWNLOAD_URL
     val send = Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text)
     ctx.startActivity(Intent.createChooser(send, t("Invitar a «${i.group.name}»", "Invite to “${i.group.name}”")))

@@ -1,6 +1,7 @@
 package app.getoff
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -31,14 +32,21 @@ class RondaTest {
         assertEquals(3, togetherBonus(listOf(a, b), 0, 200 * min))
     }
 
-    @Test fun firstUnlockStartsCountingWhenTheLastOneLocks() {
+    @Test fun everyUnlockCountsFromWhenTheLastOneLocks() {
         val locked = mapOf(
-            "ana" to listOf(5 * min..40 * min), // bloqueó primero, desbloquea a los 40
-            "beto" to listOf(10 * min..30 * min), // desbloquea a los 30: paga
+            "ana" to listOf(5 * min..40 * min), // bloqueó antes que todos y desbloquea a los 40
+            "beto" to listOf(2 * min..4 * min, 10 * min..30 * min, 35 * min..50 * min), // lo de antes no cuenta; después, dos
         )
-        assertEquals("beto", firstToUnlock(locked, 0, 100 * min))
-        assertNull(firstToUnlock(locked, 0, 20 * min)) // nadie desbloqueó todavía
-        assertNull(firstToUnlock(mapOf("ana" to listOf(0L..10 * min), "beto" to listOf(20 * min..30 * min)), 0, 100 * min))
+        assertEquals(mapOf("ana" to 1, "beto" to 2), unlockCounts(locked, 0, 100 * min))
+        assertEquals(mapOf("ana" to 0, "beto" to 0), unlockCounts(locked, 0, 20 * min)) // nadie desbloqueó todavía
+        assertEquals(emptyMap<String, Int>(), unlockCounts(mapOf("ana" to listOf(0L..10 * min), "beto" to listOf(20 * min..30 * min)), 0, 100 * min))
+    }
+
+    @Test fun codesFromAnotherVersionAreRecognized() {
+        assertNull(decode("D1|M|n1|a,Ana,3,1,"))
+        assertTrue(otherVersion("D1|M|n1|a,Ana,3,1,"))
+        assertFalse(otherVersion(encode(Mine("n1", Member("a", "Ana", 3, 1)))))
+        assertFalse(otherVersion("https://otra.cosa"))
     }
 
     @Test fun codesRoundTrip() {
@@ -57,19 +65,20 @@ class RondaTest {
     @Test fun outcomeChargesFineIntoThePot() {
         val f = Final("n", "r", 1, 121 * min, listOf(
             Member("a", "Ana", 10, 0, listOf(1L..121 * min)),
-            Member("b", "Beto", 10, 0, listOf(1L..61 * min)), // desbloquea primero
+            Member("b", "Beto", 10, 0, listOf(1L..61 * min, 70 * min..100 * min)), // desbloquea dos veces
         ))
         val o = outcome(f).associateBy { it.id }
-        assertEquals(2, o.getValue("a").bonus) // 60 min juntos bloqueados
-        assertEquals(5, o.getValue("b").fine)
-        assertEquals(5, o.values.sumOf { it.share }) // la multa se reparte
+        assertEquals(3, o.getValue("a").bonus) // 60 min juntos, más 30 cuando Beto vuelve a bloquear
+        assertEquals(10, o.getValue("b").fine)
+        assertEquals(0, o.getValue("a").fine)
+        assertEquals(10, o.values.sumOf { it.share }) // las multas se reparten entre todos, Beto incluido
     }
 
     @Test fun salaCarriesGroupNameAndReadsOldCodes() {
         val sala = Sala(false, "n1", "g1", 0, 60_000, "Ana", "Los del jueves")
         assertEquals(sala, decode(encode(sala)))
-        // Código de antes de los grupos: sin nombre.
-        assertEquals("", (decode("D1|S|S|n1|g1|0|60000|Ana") as Sala).group)
+        // Sin nombre de grupo (como los códigos de antes de los grupos).
+        assertEquals("", (decode("D2|S|S|n1|g1|0|60000|Ana") as Sala).group)
     }
 
     @Test fun hostMemberMatchesFinalAfterNormalizing() {
